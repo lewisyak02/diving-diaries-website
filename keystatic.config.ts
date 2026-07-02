@@ -7,9 +7,11 @@ import { config, fields, collection, singleton } from '@keystatic/core';
 // At deploy time this switches to { kind: 'github', repo: 'owner/repo' }
 // so Lewis can log in and edit in the browser on the live site.
 export default config({
-  storage: {
-    kind: 'local',
-  },
+  // Local editing in dev; on the live site, edits save to GitHub (which triggers
+  // a Netlify rebuild). The GitHub connection is set up once via /keystatic.
+  storage: import.meta.env.PROD
+    ? { kind: 'github', repo: 'lewisyak02/diving-diaries-website' }
+    : { kind: 'local' },
 
   ui: {
     brand: { name: 'Diving Diaries' },
