@@ -1,5 +1,7 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
 
+// (videos singleton is defined inline below)
+
 // Diving Diaries content model.
 // storage.kind is 'local' for now (edit at /keystatic when running locally).
 // At deploy time this switches to { kind: 'github', repo: 'owner/repo' }
@@ -31,6 +33,27 @@ export default config({
         youtube: fields.url({ label: 'YouTube URL' }),
         instagram: fields.url({ label: 'Instagram URL' }),
         tiktok: fields.url({ label: 'TikTok URL' }),
+      },
+    }),
+
+    videos: singleton({
+      label: 'Videos (Watch page)',
+      path: 'src/content/videos/index',
+      format: { data: 'json' },
+      schema: {
+        items: fields.array(
+          fields.object({
+            title: fields.text({ label: 'Title' }),
+            id: fields.text({
+              label: 'YouTube video ID',
+              description: 'The 11-character ID from the video URL (youtu.be/XXXXXXXXXXX).',
+            }),
+          }),
+          {
+            label: 'Videos',
+            itemLabel: (props) => props.fields.title.value || props.fields.id.value,
+          }
+        ),
       },
     }),
   },

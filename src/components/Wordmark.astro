@@ -1,28 +1,25 @@
 ---
-// The Diving Diaries wordmark — bold display text inside a stadium outline,
-// echoing the logo. `variant` controls colour for light vs dark backgrounds.
+import { Image } from 'astro:assets';
+import white from '../assets/logo/wordmark-white.png';
+import dark from '../assets/logo/wordmark-dark.png';
+
+// The Diving Diaries logo (D·DIARIES mark). `variant` picks white (for dark
+// backgrounds) or dark (for light backgrounds).
 interface Props {
   variant?: 'light' | 'dark';
   size?: 'sm' | 'md' | 'lg';
   href?: string | null;
   class?: string;
 }
-const { variant = 'dark', size = 'md', href = '/', class: klass = '' } = Astro.props;
+const { variant = 'light', size = 'md', href = '/', class: klass = '' } = Astro.props;
 
-const color = variant === 'light' ? 'text-white border-white' : 'text-ocean-800 border-ocean-800';
-const sizing = {
-  sm: 'text-base px-3 py-1 border-2',
-  md: 'text-xl px-4 py-1.5 border-[3px]',
-  lg: 'text-3xl px-6 py-2 border-4',
-}[size];
+const img = variant === 'light' ? white : dark;
+const heights = { sm: 28, md: 40, lg: 96 };
+const h = heights[size];
 
-const Tag = href ? 'a' : 'span';
+const Tag = href ? 'a' : 'div';
 ---
 
-<Tag
-  {...href ? { href } : {}}
-  class={`wordmark inline-flex items-center rounded-full font-black leading-none tracking-tight ${color} ${sizing} ${klass}`}
-  aria-label="Diving Diaries"
->
-  DIVINGDIARIES
+<Tag {...href ? { href } : {}} class={`inline-flex items-center ${klass}`} aria-label="Diving Diaries">
+  <Image src={img} alt="Diving Diaries" height={h} width={Math.round((img.width / img.height) * h)} densities={[1, 2]} loading="eager" />
 </Tag>

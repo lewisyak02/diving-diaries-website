@@ -1,0 +1,52 @@
+---
+// Performant YouTube grid: renders lightweight thumbnail "facades" that only
+// load the real iframe when clicked (keeps the page fast even with 30+ videos).
+interface Props {
+  videos: { id: string; title: string }[];
+}
+const { videos } = Astro.props;
+---
+
+<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  {
+    videos.map((v) => (
+      <article class="video-facade group flex flex-col overflow-hidden rounded-2xl border border-ocean-100 bg-white transition-all hover:-translate-y-1 hover:shadow-xl" data-id={v.id}>
+        <button
+          type="button"
+          class="relative block aspect-video w-full overflow-hidden bg-ocean-900"
+          aria-label={`Play ${v.title}`}
+        >
+          <img
+            src={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`}
+            alt={v.title}
+            loading="lazy"
+            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <span class="absolute inset-0 bg-ocean-950/10 transition-colors group-hover:bg-ocean-950/30" />
+          <span class="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg transition-transform group-hover:scale-110">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          </span>
+        </button>
+        <h3 class="p-4 text-base leading-snug text-ocean-800">{v.title}</h3>
+      </article>
+    ))
+  }
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.video-facade').forEach((card) => {
+    const btn = card.querySelector('button');
+    btn?.addEventListener('click', () => {
+      const id = card.dataset.id;
+      if (!id) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+      iframe.title = card.querySelector('h3')?.textContent ?? 'Video';
+      iframe.allow =
+        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      iframe.className = 'aspect-video w-full';
+      btn.replaceWith(iframe);
+    });
+  });
+</script>

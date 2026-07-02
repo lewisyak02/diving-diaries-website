@@ -29,12 +29,12 @@ const num = String(index + 1).padStart(2, '0');
       )
     }
     <div class="absolute inset-0 bg-gradient-to-t from-ocean-950/80 via-ocean-950/10 to-transparent"></div>
-    <span class="wordmark absolute left-4 top-3 text-sm font-black text-white/70">{num}</span>
+    <span class="absolute left-4 top-3 rounded-full bg-purple-500 px-2 py-0.5 font-display text-xs font-bold text-white">{num}</span>
     <h3 class="absolute bottom-3 left-4 text-2xl text-white drop-shadow">{label}</h3>
   </div>
   <div class="flex flex-1 flex-col p-5">
     <p class="flex-1 text-sm leading-relaxed text-slate-600">{blurb}</p>
-    <span class="mt-4 text-sm font-bold uppercase tracking-wide text-ocean-600">
+    <span class="mt-4 text-sm font-bold uppercase tracking-wide text-purple-600 transition-colors group-hover:text-purple-700">
       Explore →
     </span>
   </div>

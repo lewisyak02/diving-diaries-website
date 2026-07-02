@@ -8,7 +8,7 @@ import PostCard from '../components/PostCard.astro';
 import { PILLARS } from '../lib/nav';
 import { SITE } from '../lib/site';
 import { pillarImages } from '../lib/pillarImages';
-import heroReef from '../assets/hero-reef.jpg';
+import logoWhite from '../assets/logo/wordmark-white.png';
 import freediver from '../assets/freediver.jpg';
 import encTurtle from '../assets/enc-turtle.jpg';
 import encClownfish from '../assets/enc-clownfish.jpg';
@@ -28,37 +28,45 @@ const encounters = [
 ---
 
 <Layout>
-  <!-- Hero -->
-  <section class="relative flex min-h-[90vh] items-center justify-center overflow-hidden">
-    <Image
-      src={heroReef}
-      alt="A turtle gliding over a coral reef"
+  <!-- Video hero -->
+  <section class="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-ocean-950">
+    <video
       class="absolute inset-0 h-full w-full object-cover"
-      widths={[768, 1280, 1920, 2560]}
-      sizes="100vw"
-      loading="eager"
-      fetchpriority="high"
-    />
-    <div class="absolute inset-0 bg-gradient-to-b from-ocean-950/70 via-ocean-900/40 to-ocean-950/85"></div>
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/hero/hawksbill-poster.jpg"
+    >
+      <source src="/hero/hawksbill.mp4" type="video/mp4" />
+    </video>
+    <div class="absolute inset-0 bg-gradient-to-b from-ocean-950/70 via-ocean-950/45 to-ocean-950/90"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(110,101,220,0.22))]"></div>
 
     <div class="relative mx-auto max-w-3xl px-5 text-center text-white">
-      <span class="wordmark inline-flex items-center rounded-full border-4 border-white px-6 py-2 text-3xl font-black leading-none tracking-tight sm:text-5xl">
-        DIVINGDIARIES
-      </span>
-      <p class="mt-6 text-base font-semibold uppercase tracking-[0.25em] text-ocean-100 sm:text-lg">
+      <Image
+        src={logoWhite}
+        alt="Diving Diaries"
+        width={520}
+        densities={[1, 2]}
+        loading="eager"
+        class="mx-auto w-[min(78vw,460px)]"
+      />
+      <p class="mt-7 text-sm font-semibold uppercase tracking-[0.3em] text-purple-200 sm:text-base">
         {SITE.tagline}
       </p>
-      <p class="mx-auto mt-5 max-w-xl text-lg text-ocean-50/90">
+      <p class="mx-auto mt-5 max-w-xl text-lg text-white/90">
         Cinematic dives, marine life encounters, and honest gear and tips from the
         Gold Coast — bringing the underwater world to every screen we can reach.
       </p>
       <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <Button href="/watch" variant="light">Watch the dives</Button>
-        <Button href="/journal" variant="outline" class="border-white text-white hover:bg-white hover:text-ocean-800">Read the journal</Button>
+        <Button href="/watch" variant="primary">Watch the dives</Button>
+        <Button href="/journal" variant="outline" class="border-white text-white hover:bg-white hover:text-ocean-900">Read the journal</Button>
       </div>
     </div>
 
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70">
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-bounce">
         <path d="M12 5v14M19 12l-7 7-7-7" />
       </svg>
@@ -69,16 +77,17 @@ const encounters = [
   <section class="border-b border-ocean-100 bg-white">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-5 py-6 text-center text-sm font-semibold uppercase tracking-widest text-ocean-700">
       <span>Gold Coast, Australia</span>
-      <span class="hidden text-ocean-200 sm:inline">/</span>
+      <span class="hidden text-purple-300 sm:inline">/</span>
       <span>Shot on GoPro &amp; DJI</span>
-      <span class="hidden text-ocean-200 sm:inline">/</span>
+      <span class="hidden text-purple-300 sm:inline">/</span>
       <span>Training toward PADI Divemaster</span>
     </div>
   </section>
 
   <!-- Intro -->
   <section class="mx-auto max-w-3xl px-5 py-20 text-center">
-    <h2 class="text-3xl text-ocean-800 sm:text-4xl">Bringing the ocean to the surface</h2>
+    <p class="kicker">The brand</p>
+    <h2 class="mt-3 text-3xl text-ocean-800 sm:text-4xl">Bringing the ocean to the surface</h2>
     <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
       Diving Diaries documents real dives, real marine life, and the journey of a
       diver progressing through the sport. We believe people protect what they love
@@ -92,10 +101,10 @@ const encounters = [
   <!-- Pillars -->
   <section class="bg-sand-50 py-20">
     <div class="mx-auto max-w-6xl px-5">
-      <h2 class="text-center text-3xl text-ocean-800 sm:text-4xl">What we create</h2>
-      <p class="mx-auto mt-3 max-w-xl text-center text-slate-600">
-        Five pillars, one obsession with the ocean.
-      </p>
+      <div class="text-center">
+        <p class="kicker">What we create</p>
+        <h2 class="mt-3 text-3xl text-ocean-800 sm:text-4xl">Five pillars, one ocean</h2>
+      </div>
       <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {PILLARS.map((p, i) => <PillarCard slug={p.slug} label={p.label} blurb={p.blurb} index={i} image={pillarImages[p.slug]} />)}
       </div>
@@ -105,8 +114,8 @@ const encounters = [
   <!-- Encounters gallery -->
   <section class="mx-auto max-w-6xl px-5 py-20">
     <div class="text-center">
-      <h2 class="text-3xl text-ocean-800 sm:text-4xl">Recent encounters</h2>
-      <p class="mx-auto mt-3 max-w-xl text-slate-600">A few frames from the deep.</p>
+      <p class="kicker">From the deep</p>
+      <h2 class="mt-3 text-3xl text-ocean-800 sm:text-4xl">Recent encounters</h2>
     </div>
     <div class="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {
@@ -119,7 +128,7 @@ const encounters = [
               sizes="(max-width: 640px) 50vw, 25vw"
               class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-ocean-950/70 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-purple-900/70 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
             <figcaption class="absolute bottom-3 left-4 text-sm font-bold uppercase tracking-wide text-white opacity-0 transition-opacity group-hover:opacity-100">
               {e.label}
             </figcaption>
@@ -138,12 +147,12 @@ const encounters = [
       widths={[768, 1280, 1920]}
       sizes="100vw"
     />
-    <div class="absolute inset-0 bg-ocean-950/70"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-ocean-950/85 via-ocean-950/70 to-purple-900/75"></div>
     <div class="relative mx-auto max-w-3xl px-5 py-28 text-center text-white">
       <p class="text-2xl font-medium leading-snug sm:text-3xl">
         “We believe people protect what they love, and love what they've seen.”
       </p>
-      <p class="mt-6 text-sm font-bold uppercase tracking-widest text-ocean-200">Our mission</p>
+      <p class="kicker mt-6 text-purple-200">Our mission</p>
     </div>
   </section>
 
@@ -152,8 +161,11 @@ const encounters = [
     posts.length > 0 && (
       <section class="mx-auto max-w-6xl px-5 py-20">
         <div class="flex items-end justify-between">
-          <h2 class="text-3xl text-ocean-800 sm:text-4xl">From the journal</h2>
-          <a href="/journal" class="text-sm font-bold uppercase tracking-wide text-ocean-600 hover:text-ocean-700">
+          <div>
+            <p class="kicker">Field notes</p>
+            <h2 class="mt-3 text-3xl text-ocean-800 sm:text-4xl">From the journal</h2>
+          </div>
+          <a href="/journal" class="text-sm font-bold uppercase tracking-wide text-purple-600 hover:text-purple-700">
             All posts →
           </a>
         </div>
@@ -174,8 +186,9 @@ const encounters = [
   }
 
   <!-- Watch CTA -->
-  <section class="bg-ocean-900">
-    <div class="mx-auto flex max-w-4xl flex-col items-center px-5 py-20 text-center text-white">
+  <section class="relative overflow-hidden bg-ocean-900">
+    <div class="absolute inset-0 bg-gradient-to-r from-ocean-900 to-purple-900/60"></div>
+    <div class="relative mx-auto flex max-w-4xl flex-col items-center px-5 py-20 text-center text-white">
       <h2 class="text-3xl sm:text-4xl">New underwater adventures every week</h2>
       <p class="mt-4 max-w-xl text-ocean-100">
         Subscribe on YouTube and follow along as we explore the beauty of the

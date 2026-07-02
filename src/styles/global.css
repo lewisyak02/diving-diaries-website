@@ -1,18 +1,13 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
-
-/* Brand display font — the Diving Diaries wordmark face */
-@font-face {
-  font-family: "Squad";
-  src: url("/fonts/squad-black.woff2") format("woff2");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
+@import "@fontsource/saira-condensed/500.css";
+@import "@fontsource/saira-condensed/600.css";
+@import "@fontsource/saira-condensed/700.css";
+@import "@fontsource/saira-condensed/800.css";
 
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Squad", var(--font-sans);
+  --font-display: "Saira Condensed", "Inter Variable", ui-sans-serif, sans-serif;
 
   /* Ocean palette — sampled from the brand banner (deep navy → bright azure) */
   --color-ocean-50: #eef4ff;
@@ -20,14 +15,25 @@
   --color-ocean-200: #b3ccff;
   --color-ocean-300: #80a9ff;
   --color-ocean-400: #4d86ff;
-  --color-ocean-500: #016fff; /* bright azure */
-  --color-ocean-600: #0151f6; /* primary brand blue */
-  --color-ocean-700: #013ec4; /* deep blue */
-  --color-ocean-800: #012364; /* deep navy */
-  --color-ocean-900: #011a4d; /* abyss */
+  --color-ocean-500: #016fff;
+  --color-ocean-600: #0151f6;
+  --color-ocean-700: #013ec4;
+  --color-ocean-800: #012364;
+  --color-ocean-900: #011a4d;
   --color-ocean-950: #01123a;
 
-  /* Warm sand neutral for light sections */
+  /* Brand purple — sampled from the YouTube/Instagram avatar (#6e65dc) */
+  --color-purple-50: #f2f1fc;
+  --color-purple-100: #e6e4fa;
+  --color-purple-200: #cfcbf5;
+  --color-purple-300: #aca3ec;
+  --color-purple-400: #8b80e4;
+  --color-purple-500: #6e65dc;
+  --color-purple-600: #5a4fd0;
+  --color-purple-700: #4a3fb8;
+  --color-purple-800: #3b3392;
+  --color-purple-900: #2f2a70;
+
   --color-sand-50: #faf8f3;
   --color-sand-100: #f4efe6;
   --color-ink: #0b1220;
@@ -36,6 +42,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
   body {
     font-family: var(--font-sans);
@@ -46,58 +53,50 @@
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: 0.01em;
+    font-weight: 700;
+    letter-spacing: 0.005em;
     text-transform: uppercase;
+    line-height: 0.98;
   }
 }
 
-/* Wordmark treatment — echoing the bold logo */
-.wordmark {
+/* Small uppercase eyebrow / kicker label — a place for the brand purple */
+.kicker {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.8rem;
+  color: var(--color-purple-500);
 }
 
 /* Rendered article / pillar body content */
 .prose-dd :where(h2) {
   font-family: var(--font-display);
   text-transform: uppercase;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   color: var(--color-ocean-800);
   margin-top: 2rem;
 }
 .prose-dd :where(h3) {
   font-family: var(--font-display);
   text-transform: uppercase;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   color: var(--color-ocean-800);
   margin-top: 1.5rem;
 }
 .prose-dd :where(a) {
-  color: var(--color-ocean-600);
+  color: var(--color-purple-600);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.prose-dd :where(a):hover {
-  color: var(--color-ocean-700);
-}
-.prose-dd :where(ul) {
-  list-style: disc;
-  padding-left: 1.5rem;
-}
-.prose-dd :where(ol) {
-  list-style: decimal;
-  padding-left: 1.5rem;
-}
-.prose-dd :where(strong) {
-  color: var(--color-ocean-800);
-  font-weight: 700;
-}
-.prose-dd :where(img) {
-  border-radius: 1rem;
-}
+.prose-dd :where(a):hover { color: var(--color-purple-700); }
+.prose-dd :where(ul) { list-style: disc; padding-left: 1.5rem; }
+.prose-dd :where(ol) { list-style: decimal; padding-left: 1.5rem; }
+.prose-dd :where(strong) { color: var(--color-ocean-800); font-weight: 700; }
+.prose-dd :where(img) { border-radius: 1rem; }
 .prose-dd :where(blockquote) {
-  border-left: 4px solid var(--color-ocean-200);
+  border-left: 4px solid var(--color-purple-300);
   padding-left: 1rem;
   font-style: italic;
   color: var(--color-ocean-800);

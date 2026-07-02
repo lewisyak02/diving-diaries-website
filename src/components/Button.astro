@@ -1,15 +1,16 @@
 ---
 interface Props {
   href: string;
-  variant?: 'primary' | 'outline' | 'light';
+  variant?: 'primary' | 'ocean' | 'outline' | 'light';
   class?: string;
   external?: boolean;
 }
 const { href, variant = 'primary', class: klass = '', external = false } = Astro.props;
 const styles = {
-  primary: 'bg-ocean-600 text-white hover:bg-ocean-700',
+  primary: 'bg-purple-500 text-white hover:bg-purple-600',
+  ocean: 'bg-ocean-600 text-white hover:bg-ocean-700',
   outline: 'border-2 border-ocean-600 text-ocean-600 hover:bg-ocean-600 hover:text-white',
-  light: 'bg-white text-ocean-800 hover:bg-ocean-50',
+  light: 'bg-white text-ocean-900 hover:bg-purple-50',
 }[variant];
 const ext = external ? { target: '_blank', rel: 'noopener' } : {};
 ---
