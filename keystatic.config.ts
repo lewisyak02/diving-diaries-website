@@ -75,13 +75,13 @@ export default config({
         pillar: fields.select({
           label: 'Pillar',
           options: [
-            { label: 'Trips', value: 'trips' },
-            { label: 'Marine Life', value: 'marine-life' },
+            { label: 'Diary Entries', value: 'diary-entries' },
+            { label: 'Dive Site Reviews', value: 'dive-site-reviews' },
             { label: 'Fish ID', value: 'fish-id' },
             { label: 'Gear', value: 'gear' },
             { label: 'Tips', value: 'tips' },
           ],
-          defaultValue: 'trips',
+          defaultValue: 'diary-entries',
         }),
         excerpt: fields.text({
           label: 'Excerpt',

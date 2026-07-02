@@ -7,32 +7,35 @@ export const NAV = [
   { label: 'Contact', href: '/contact' },
 ] as const;
 
-export type PillarSlug = 'trips' | 'marine-life' | 'fish-id' | 'gear' | 'tips';
+export type PillarSlug =
+  | 'diary-entries'
+  | 'dive-site-reviews'
+  | 'fish-id'
+  | 'gear'
+  | 'tips';
 
-// Pillar metadata (label + short blurb from the About doc). Long-form pillar
-// copy lives in the CMS (src/content/pillars/*).
+// Pillar metadata (label + short blurb). Long-form pillar copy lives in the CMS
+// (src/content/pillars/*).
 export const PILLARS: { slug: PillarSlug; label: string; blurb: string }[] = [
   {
-    slug: 'trips',
-    label: 'Trips',
-    blurb: 'Dive travel vlogs and adventure diaries from the sites we explore.',
+    slug: 'diary-entries',
+    label: 'Diary Entries',
+    blurb: 'Long-form dive diaries — full adventures from the dives I do, start to finish.',
   },
   {
-    slug: 'marine-life',
-    label: 'Marine Life',
-    blurb:
-      'Up-close encounters with the ocean’s inhabitants, from stingrays and zebra sharks to the smallest reef dwellers.',
+    slug: 'dive-site-reviews',
+    label: 'Dive Site Reviews',
+    blurb: 'Honest reviews of the sites I dive — conditions, what to expect, and what you might see.',
   },
   {
     slug: 'fish-id',
     label: 'Fish ID',
-    blurb:
-      'Our signature species-identification series, helping you recognise the marine life you see.',
+    blurb: 'My signature species-identification series, helping you recognise the marine life you see.',
   },
   {
     slug: 'gear',
     label: 'Gear',
-    blurb: 'Honest looks at the cameras, masks, and dive equipment we actually use.',
+    blurb: 'Honest reviews of the cameras, masks, and dive equipment I use — coming soon.',
   },
   {
     slug: 'tips',

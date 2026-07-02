@@ -6,7 +6,7 @@ const journal = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
-    pillar: z.enum(['trips', 'marine-life', 'fish-id', 'gear', 'tips']),
+    pillar: z.enum(['diary-entries', 'dive-site-reviews', 'fish-id', 'gear', 'tips']),
     excerpt: z.string().optional(),
     cover: z.string().optional(),
     draft: z.boolean().default(false),

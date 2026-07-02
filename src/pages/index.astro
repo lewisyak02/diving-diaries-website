@@ -8,7 +8,6 @@ import PostCard from '../components/PostCard.astro';
 import { PILLARS } from '../lib/nav';
 import { SITE } from '../lib/site';
 import { pillarImages } from '../lib/pillarImages';
-import logoWhite from '../assets/logo/wordmark-white.png';
 import freediver from '../assets/freediver.jpg';
 import encTurtle from '../assets/enc-turtle.jpg';
 import encClownfish from '../assets/enc-clownfish.jpg';
@@ -45,18 +44,11 @@ const encounters = [
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(110,101,220,0.22))]"></div>
 
     <div class="relative mx-auto max-w-3xl px-5 text-center text-white">
-      <Image
-        src={logoWhite}
-        alt="Diving Diaries"
-        width={520}
-        densities={[1, 2]}
-        loading="eager"
-        class="mx-auto w-[min(78vw,460px)]"
-      />
-      <p class="mt-7 text-sm font-semibold uppercase tracking-[0.3em] text-purple-200 sm:text-base">
+      <p class="kicker text-purple-200">Diving Diaries</p>
+      <h1 class="mx-auto mt-4 max-w-2xl text-4xl font-bold uppercase leading-[0.95] drop-shadow-sm sm:text-6xl md:text-7xl">
         {SITE.tagline}
-      </p>
-      <p class="mx-auto mt-5 max-w-xl text-lg text-white/90">
+      </h1>
+      <p class="mx-auto mt-6 max-w-xl text-lg text-white/90">
         Cinematic dives, marine life encounters, and honest gear and tips from the
         Gold Coast — bringing the underwater world to every screen we can reach.
       </p>
