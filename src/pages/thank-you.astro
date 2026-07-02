@@ -1,0 +1,17 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Button from '../components/Button.astro';
+export const prerender = true;
+---
+
+<Layout title="Thanks" description="Your message has been sent." noindex={true}>
+  <section class="mx-auto max-w-2xl px-5 py-28 text-center">
+    <h1 class="text-4xl text-ocean-800">Thanks — message sent</h1>
+    <p class="mt-4 text-lg text-slate-600">
+      Thanks for reaching out. We'll get back to you as soon as we surface.
+    </p>
+    <div class="mt-8">
+      <Button href="/">Back to home</Button>
+    </div>
+  </section>
+</Layout>

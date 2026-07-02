@@ -1,0 +1,49 @@
+---
+import { pillarLabel } from '../lib/nav';
+interface Props {
+  slug: string;
+  title: string;
+  date: Date;
+  pillar: string;
+  excerpt?: string;
+  cover?: string;
+}
+const { slug, title, date, pillar, excerpt, cover } = Astro.props;
+const dateStr = date.toLocaleDateString('en-AU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<article class="group flex flex-col overflow-hidden rounded-2xl border border-ocean-100 bg-white transition-all hover:-translate-y-1 hover:shadow-lg">
+  <a href={`/journal/${slug}`} class="block">
+    <div class="aspect-[16/9] overflow-hidden bg-ocean-100">
+      {
+        cover ? (
+          <img
+            src={cover}
+            alt={title}
+            loading="lazy"
+            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-ocean-600 to-ocean-900">
+            <span class="wordmark text-lg font-black text-white/80">DIVINGDIARIES</span>
+          </div>
+        )
+      }
+    </div>
+  </a>
+  <div class="flex flex-1 flex-col p-5">
+    <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-ocean-500">
+      <span>{pillarLabel(pillar)}</span>
+      <span class="text-ocean-200">•</span>
+      <time datetime={date.toISOString()} class="text-slate-500">{dateStr}</time>
+    </div>
+    <h3 class="mt-2 text-lg leading-snug text-ocean-800">
+      <a href={`/journal/${slug}`} class="transition-colors hover:text-ocean-600">{title}</a>
+    </h3>
+    {excerpt && <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{excerpt}</p>}
+  </div>
+</article>

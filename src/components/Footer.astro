@@ -1,0 +1,63 @@
+---
+import Wordmark from './Wordmark.astro';
+import { NAV } from '../lib/nav';
+import { SITE, socialLinks } from '../lib/site';
+const year = new Date().getFullYear();
+const socials = socialLinks;
+---
+
+<footer class="bg-ocean-900 text-ocean-100">
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-3">
+    <div>
+      <Wordmark variant="light" size="sm" href="/" />
+      <p class="mt-4 max-w-xs text-sm text-ocean-200">{SITE.tagline}.</p>
+      <p class="mt-1 text-sm text-ocean-300">{SITE.location}</p>
+    </div>
+
+    <div>
+      <h2 class="text-sm font-bold uppercase tracking-widest text-white">Explore</h2>
+      <ul class="mt-4 space-y-2">
+        {
+          NAV.filter((n) => n.href !== '/').map((n) => (
+            <li>
+              <a href={n.href} class="text-sm text-ocean-200 transition-colors hover:text-white">
+                {n.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="text-sm font-bold uppercase tracking-widest text-white">Follow</h2>
+      <ul class="mt-4 space-y-2">
+        {
+          socials.map((s) => (
+            <li>
+              <a
+                href={s.href}
+                rel="me noopener"
+                target="_blank"
+                class="text-sm text-ocean-200 transition-colors hover:text-white"
+              >
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href={`mailto:${SITE.email}`} class="text-sm text-ocean-200 transition-colors hover:text-white">
+            Email
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-ocean-800">
+    <p class="mx-auto max-w-6xl px-5 py-5 text-xs text-ocean-400">
+      © {year} {SITE.name}. All rights reserved.
+    </p>
+  </div>
+</footer>

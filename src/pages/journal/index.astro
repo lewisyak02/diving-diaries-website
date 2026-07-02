@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { PILLARS } from '../../lib/nav';
+
+const posts = (await getCollection('journal', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Layout
+  title="Journal"
+  description="Dive logs, fish ID write-ups, gear notes, and tips from Diving Diaries — the stories behind the videos."
+>
+  <section class="bg-ocean-900 text-white">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h1 class="text-4xl sm:text-6xl">Journal</h1>
+      <p class="mt-4 max-w-2xl text-lg text-ocean-100">
+        Dive logs, fish ID write-ups, gear notes, and tips — the stories behind the
+        videos, and the field notes from every dive.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-2">
+        {
+          PILLARS.map((p) => (
+            <a
+              href={`/pillars/${p.slug}`}
+              class="rounded-full border border-ocean-700 px-4 py-1.5 text-sm font-semibold text-ocean-100 transition-colors hover:border-white hover:text-white"
+            >
+              {p.label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 py-16">
+    {
+      posts.length > 0 ? (
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p) => (
+            <PostCard
+              slug={p.id}
+              title={p.data.title}
+              date={p.data.date}
+              pillar={p.data.pillar}
+              excerpt={p.data.excerpt}
+              cover={p.data.cover}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="text-center text-slate-600">The first journal entries are coming soon.</p>
+      )
+    }
+  </section>
+</Layout>

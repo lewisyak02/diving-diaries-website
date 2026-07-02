@@ -1,0 +1,58 @@
+---
+import Wordmark from './Wordmark.astro';
+import { NAV } from '../lib/nav';
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path.startsWith(href);
+---
+
+<header class="sticky top-0 z-50 border-b border-ocean-100 bg-white/85 backdrop-blur-md">
+  <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
+    <Wordmark variant="dark" size="sm" href="/" />
+
+    <!-- Desktop nav -->
+    <ul class="hidden items-center gap-7 md:flex">
+      {
+        NAV.filter((n) => n.href !== '/').map((n) => (
+          <li>
+            <a
+              href={n.href}
+              class:list={[
+                'text-sm font-semibold uppercase tracking-wide transition-colors',
+                isActive(n.href) ? 'text-ocean-600' : 'text-ink hover:text-ocean-600',
+              ]}
+            >
+              {n.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Mobile nav (no-JS, uses <details>) -->
+    <details class="relative md:hidden">
+      <summary class="flex cursor-pointer list-none items-center rounded-md p-2 text-ink">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </summary>
+      <ul class="absolute right-0 mt-2 w-48 rounded-xl border border-ocean-100 bg-white p-2 shadow-lg">
+        {
+          NAV.map((n) => (
+            <li>
+              <a
+                href={n.href}
+                class:list={[
+                  'block rounded-lg px-3 py-2 text-sm font-semibold uppercase tracking-wide',
+                  isActive(n.href) ? 'bg-ocean-50 text-ocean-600' : 'text-ink hover:bg-ocean-50',
+                ]}
+              >
+                {n.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </details>
+  </nav>
+</header>

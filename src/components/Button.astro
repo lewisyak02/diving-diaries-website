@@ -1,0 +1,23 @@
+---
+interface Props {
+  href: string;
+  variant?: 'primary' | 'outline' | 'light';
+  class?: string;
+  external?: boolean;
+}
+const { href, variant = 'primary', class: klass = '', external = false } = Astro.props;
+const styles = {
+  primary: 'bg-ocean-600 text-white hover:bg-ocean-700',
+  outline: 'border-2 border-ocean-600 text-ocean-600 hover:bg-ocean-600 hover:text-white',
+  light: 'bg-white text-ocean-800 hover:bg-ocean-50',
+}[variant];
+const ext = external ? { target: '_blank', rel: 'noopener' } : {};
+---
+
+<a
+  href={href}
+  {...ext}
+  class={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors ${styles} ${klass}`}
+>
+  <slot />
+</a>

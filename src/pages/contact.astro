@@ -1,0 +1,92 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SITE, socialLinks } from '../lib/site';
+
+// Prerendered so Netlify's build-time form detection picks up the form below.
+export const prerender = true;
+
+const socials = socialLinks;
+---
+
+<Layout
+  title="Contact"
+  description="Get in touch with Diving Diaries — collaborations, sponsorships, or just to say hello."
+>
+  <section class="mx-auto max-w-2xl px-5 py-20">
+    <h1 class="text-4xl text-ocean-800 sm:text-5xl">Get in touch</h1>
+    <p class="mt-4 text-lg leading-relaxed text-slate-600">
+      Collaborations, sponsorships, or just to say hello — drop a message below or
+      email <a href={`mailto:${SITE.email}`} class="font-semibold text-ocean-600 hover:underline">{SITE.email}</a>.
+    </p>
+
+    <!-- Netlify Forms: detected automatically at deploy from this static HTML. -->
+    <form
+      name="contact"
+      method="POST"
+      action="/thank-you"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+      class="mt-10 space-y-5"
+    >
+      <input type="hidden" name="form-name" value="contact" />
+      <p class="hidden">
+        <label>Don't fill this out: <input name="bot-field" /></label>
+      </p>
+
+      <div>
+        <label for="name" class="block text-sm font-semibold text-ocean-800">Name</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          required
+          class="mt-2 w-full rounded-lg border border-ocean-200 px-4 py-3 outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-200"
+        />
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-semibold text-ocean-800">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          class="mt-2 w-full rounded-lg border border-ocean-200 px-4 py-3 outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-200"
+        />
+      </div>
+
+      <div>
+        <label for="message" class="block text-sm font-semibold text-ocean-800">Message</label>
+        <textarea
+          id="message"
+          name="message"
+          rows="5"
+          required
+          class="mt-2 w-full rounded-lg border border-ocean-200 px-4 py-3 outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-200"
+        ></textarea>
+      </div>
+
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center rounded-full bg-ocean-600 px-8 py-3 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-ocean-700"
+      >
+        Send message
+      </button>
+    </form>
+
+    <div class="mt-14 border-t border-ocean-100 pt-8">
+      <h2 class="text-lg text-ocean-800">Follow along</h2>
+      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+        {
+          socials.map((s) => (
+            <li>
+              <a href={s.href} target="_blank" rel="me noopener" class="font-semibold text-ocean-600 hover:underline">
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,114 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Button from '../components/Button.astro';
+import PillarCard from '../components/PillarCard.astro';
+import PostCard from '../components/PostCard.astro';
+import { PILLARS } from '../lib/nav';
+import { SITE } from '../lib/site';
+import heroReef from '../assets/hero-reef.jpg';
+
+const posts = (await getCollection('journal', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<Layout>
+  <!-- Hero -->
+  <section class="relative flex min-h-[88vh] items-center justify-center overflow-hidden">
+    <Image
+      src={heroReef}
+      alt="A turtle gliding over a coral reef"
+      class="absolute inset-0 h-full w-full object-cover"
+      widths={[768, 1280, 1920, 2560]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <div class="absolute inset-0 bg-gradient-to-b from-ocean-950/70 via-ocean-900/40 to-ocean-950/80"></div>
+
+    <div class="relative mx-auto max-w-3xl px-5 text-center text-white">
+      <span class="wordmark inline-flex items-center rounded-full border-4 border-white px-6 py-2 text-3xl font-black leading-none tracking-tight sm:text-5xl">
+        DIVINGDIARIES
+      </span>
+      <p class="mt-6 text-lg font-medium uppercase tracking-[0.2em] text-ocean-100 sm:text-xl">
+        {SITE.tagline}
+      </p>
+      <p class="mx-auto mt-4 max-w-xl text-base text-ocean-100/90">
+        Cinematic dives, marine life encounters, and honest gear and tips from the
+        Gold Coast — bringing the underwater world to every screen we can reach.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <Button href="/watch" variant="light">Watch the dives</Button>
+        <Button href="/journal" variant="outline" class="border-white text-white hover:bg-white hover:text-ocean-800">Read the journal</Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Intro -->
+  <section class="mx-auto max-w-4xl px-5 py-20 text-center">
+    <h2 class="text-2xl text-ocean-800 sm:text-3xl">Bringing the ocean to the surface</h2>
+    <p class="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
+      Diving Diaries documents real dives, real marine life, and the journey of a
+      diver progressing through the sport. We believe people protect what they love
+      — and love what they've seen — so we make the underwater world visible.
+    </p>
+    <div class="mt-6">
+      <Button href="/about" variant="outline">More about the brand</Button>
+    </div>
+  </section>
+
+  <!-- Pillars -->
+  <section class="bg-sand-50 py-20">
+    <div class="mx-auto max-w-6xl px-5">
+      <h2 class="text-center text-2xl text-ocean-800 sm:text-3xl">What we create</h2>
+      <p class="mx-auto mt-3 max-w-xl text-center text-slate-600">
+        Five pillars, one obsession with the ocean.
+      </p>
+      <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {PILLARS.map((p, i) => <PillarCard slug={p.slug} label={p.label} blurb={p.blurb} index={i} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest journal -->
+  {
+    posts.length > 0 && (
+      <section class="mx-auto max-w-6xl px-5 py-20">
+        <div class="flex items-end justify-between">
+          <h2 class="text-2xl text-ocean-800 sm:text-3xl">From the journal</h2>
+          <a href="/journal" class="text-sm font-bold uppercase tracking-wide text-ocean-600 hover:text-ocean-700">
+            All posts →
+          </a>
+        </div>
+        <div class="mt-8 grid gap-6 md:grid-cols-3">
+          {posts.map((p) => (
+            <PostCard
+              slug={p.id}
+              title={p.data.title}
+              date={p.data.date}
+              pillar={p.data.pillar}
+              excerpt={p.data.excerpt}
+              cover={p.data.cover}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Watch CTA -->
+  <section class="bg-ocean-900">
+    <div class="mx-auto flex max-w-4xl flex-col items-center px-5 py-20 text-center text-white">
+      <h2 class="text-2xl sm:text-3xl">New underwater adventures every week</h2>
+      <p class="mt-4 max-w-xl text-ocean-100">
+        Subscribe on YouTube and follow along as we explore the beauty of the
+        underwater world — one dive at a time.
+      </p>
+      <div class="mt-8">
+        <Button href={SITE.socials.youtube} variant="light" external>Subscribe on YouTube</Button>
+      </div>
+    </div>
+  </section>
+</Layout>

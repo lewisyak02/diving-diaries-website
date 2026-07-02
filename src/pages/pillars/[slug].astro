@@ -1,0 +1,79 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import Button from '../../components/Button.astro';
+import { PILLARS } from '../../lib/nav';
+import { SITE } from '../../lib/site';
+
+export async function getStaticPaths() {
+  return PILLARS.map((p) => ({ params: { slug: p.slug }, props: { pillar: p } }));
+}
+
+const { pillar } = Astro.props;
+const entry = await getEntry('pillars', pillar.slug);
+const { Content } = entry ? await render(entry) : { Content: null };
+
+const posts = (await getCollection('journal', ({ data }) => !data.draft && data.pillar === pillar.slug))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Layout
+  title={pillar.label}
+  description={`${pillar.label} — ${pillar.blurb} Part of Diving Diaries.`}
+>
+  <!-- Header band -->
+  <section class="bg-ocean-900 text-white">
+    <div class="mx-auto max-w-4xl px-5 py-20">
+      <a href="/#pillars" class="text-sm font-semibold uppercase tracking-wide text-ocean-300 hover:text-white">
+        ← All pillars
+      </a>
+      <h1 class="mt-4 text-4xl sm:text-6xl">{pillar.label}</h1>
+      <p class="mt-4 max-w-2xl text-lg text-ocean-100">{pillar.blurb}</p>
+    </div>
+  </section>
+
+  <!-- Long-form content -->
+  {
+    Content && (
+      <section class="mx-auto max-w-3xl px-5 py-16">
+        <div class="prose-dd space-y-5 text-lg leading-relaxed text-slate-700">
+          <Content />
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Posts in this pillar -->
+  <section class="mx-auto max-w-6xl px-5 pb-20">
+    {
+      posts.length > 0 ? (
+        <>
+          <h2 class="text-2xl text-ocean-800">Latest {pillar.label.toLowerCase()}</h2>
+          <div class="mt-8 grid gap-6 md:grid-cols-3">
+            {posts.map((p) => (
+              <PostCard
+                slug={p.id}
+                title={p.data.title}
+                date={p.data.date}
+                pillar={p.data.pillar}
+                excerpt={p.data.excerpt}
+                cover={p.data.cover}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div class="rounded-2xl border border-dashed border-ocean-200 bg-sand-50 p-10 text-center">
+          <p class="text-slate-600">
+            New {pillar.label.toLowerCase()} content is on the way. In the meantime,
+            catch the latest on YouTube.
+          </p>
+          <div class="mt-5">
+            <Button href={SITE.socials.youtube} external>Watch on YouTube</Button>
+          </div>
+        </div>
+      )
+    }
+  </section>
+</Layout>

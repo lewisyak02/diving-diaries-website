@@ -1,0 +1,88 @@
+---
+import { SITE, sameAs } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or root-relative path to a social share image. */
+  image?: string;
+  /** Set true on pages that should not be indexed (e.g. the CMS). */
+  noindex?: boolean;
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = SITE.description,
+  image = '/og-default.jpg',
+  noindex = false,
+  type = 'website',
+} = Astro.props;
+
+const pageTitle = title ? `${title} — ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const imageUrl = new URL(image, SITE.url).href;
+
+// JSON-LD: the Organization (the brand) and the Person (the diver behind it).
+// sameAs links tie the entity to its social profiles — this is what feeds
+// Google's description / knowledge panel.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE.url}/#organization`,
+      name: SITE.name,
+      url: SITE.url,
+      slogan: SITE.tagline,
+      description: SITE.description,
+      email: SITE.email,
+      logo: new URL('/og-default.jpg', SITE.url).href,
+      sameAs,
+      founder: { '@id': `${SITE.url}/#person` },
+      areaServed: SITE.location,
+    },
+    {
+      '@type': 'Person',
+      '@id': `${SITE.url}/#person`,
+      name: SITE.founder,
+      description:
+        'Underwater content creator and diver based on the Gold Coast, training toward PADI Divemaster.',
+      url: SITE.url,
+      sameAs,
+      worksFor: { '@id': `${SITE.url}/#organization` },
+      homeLocation: SITE.location,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE.url}/#website`,
+      url: SITE.url,
+      name: SITE.name,
+      description: SITE.description,
+      publisher: { '@id': `${SITE.url}/#organization` },
+    },
+  ],
+};
+---
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<!-- Open Graph -->
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={imageUrl} />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+
+<!-- Structured data -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
