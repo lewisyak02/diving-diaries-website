@@ -14,18 +14,18 @@ export type PillarSlug =
   | 'gear'
   | 'tips';
 
-// Pillar metadata (label + short blurb). Long-form pillar copy lives in the CMS
+// Pillar metadata (label + short blurb). Long form pillar copy lives in the CMS
 // (src/content/pillars/*).
 export const PILLARS: { slug: PillarSlug; label: string; blurb: string }[] = [
   {
     slug: 'diary-entries',
     label: 'Diary Entries',
-    blurb: 'Long-form dive diaries — full adventures from the dives I do, start to finish.',
+    blurb: 'Long form dive diaries, full adventures from the dives I do, start to finish.',
   },
   {
     slug: 'dive-site-reviews',
     label: 'Dive Site Reviews',
-    blurb: 'Honest reviews of the sites I dive — conditions, what to expect, and what you might see.',
+    blurb: 'Honest reviews of the sites I dive, conditions, what to expect, and what you might see.',
   },
   {
     slug: 'fish-id',
@@ -35,7 +35,7 @@ export const PILLARS: { slug: PillarSlug; label: string; blurb: string }[] = [
   {
     slug: 'gear',
     label: 'Gear',
-    blurb: 'Honest reviews of the cameras, masks, and dive equipment I use — coming soon.',
+    blurb: 'Honest reviews of the cameras, masks, and dive equipment I use, coming soon.',
   },
   {
     slug: 'tips',

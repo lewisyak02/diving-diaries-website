@@ -23,7 +23,7 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft && data.
 
 <Layout
   title={pillar.label}
-  description={`${pillar.label} — ${pillar.blurb} Part of Diving Diaries.`}
+  description={`${pillar.label}, ${pillar.blurb} Part of Diving Diaries.`}
 >
   <!-- Header hero -->
   <section class="relative flex min-h-[55vh] items-end overflow-hidden">
@@ -49,7 +49,7 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft && data.
     </div>
   </section>
 
-  <!-- Long-form content -->
+  <!-- Long form content -->
   {
     Content && (
       <section class="mx-auto max-w-3xl px-5 py-16">

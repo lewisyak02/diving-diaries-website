@@ -36,6 +36,28 @@ export default config({
       },
     }),
 
+    encounters: singleton({
+      label: 'Recent encounters (Home)',
+      path: 'src/content/encounters/index',
+      format: { data: 'json' },
+      schema: {
+        items: fields.array(
+          fields.object({
+            image: fields.image({
+              label: 'Photo',
+              directory: 'public/images/encounters',
+              publicPath: '/images/encounters/',
+            }),
+            caption: fields.text({ label: 'Caption' }),
+          }),
+          {
+            label: 'Encounters',
+            itemLabel: (props) => props.fields.caption.value || 'Photo',
+          }
+        ),
+      },
+    }),
+
     videos: singleton({
       label: 'Videos (Watch page)',
       path: 'src/content/videos/index',

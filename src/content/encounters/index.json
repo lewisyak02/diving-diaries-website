@@ -1,0 +1,8 @@
+{
+  "items": [
+    { "image": "/images/encounters/green-turtle.jpg", "caption": "Green turtle" },
+    { "image": "/images/encounters/cowfish.jpg", "caption": "Cowfish" },
+    { "image": "/images/encounters/reef-descent.jpg", "caption": "Reef descent" },
+    { "image": "/images/encounters/anemonefish.jpg", "caption": "Anemonefish" }
+  ]
+}
