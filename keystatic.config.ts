@@ -72,6 +72,23 @@ export default config({
               label: 'YouTube video ID',
               description: 'The 11-character ID from the video URL (youtu.be/XXXXXXXXXXX).',
             }),
+            pillar: fields.select({
+              label: 'Pillar',
+              description: 'Which pillar page this video shows on. "None" keeps it on the Watch page only.',
+              options: [
+                { label: 'None (Watch page only)', value: 'none' },
+                { label: 'Diary Entries', value: 'diary-entries' },
+                { label: 'Dive Site Reviews', value: 'dive-site-reviews' },
+                { label: 'Fish ID', value: 'fish-id' },
+                { label: 'Gear', value: 'gear' },
+                { label: 'Tips', value: 'tips' },
+              ],
+              defaultValue: 'none',
+            }),
+            short: fields.checkbox({
+              label: 'Short / reel (vertical)',
+              defaultValue: false,
+            }),
           }),
           {
             label: 'Videos',

@@ -30,7 +30,7 @@ export const PILLARS: { slug: PillarSlug; label: string; blurb: string }[] = [
   {
     slug: 'fish-id',
     label: 'Fish ID',
-    blurb: 'My signature species-identification series, helping you recognise the marine life you see.',
+    blurb: 'My signature species identification series, helping you recognise the marine life you see.',
   },
   {
     slug: 'gear',

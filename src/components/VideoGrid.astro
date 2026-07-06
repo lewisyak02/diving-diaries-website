@@ -1,19 +1,27 @@
 ---
 // Performant YouTube grid: renders lightweight thumbnail "facades" that only
 // load the real iframe when clicked (keeps the page fast even with 30+ videos).
+// Shorts/reels render in a vertical 9:16 frame.
 interface Props {
-  videos: { id: string; title: string }[];
+  videos: { id: string; title: string; short?: boolean }[];
+  reels?: boolean;
 }
-const { videos } = Astro.props;
+const { videos, reels = false } = Astro.props;
+const cols = reels
+  ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+  : 'sm:grid-cols-2 lg:grid-cols-3';
 ---
 
-<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<div class={`grid gap-6 ${cols}`}>
   {
     videos.map((v) => (
       <article class="video-facade group flex flex-col overflow-hidden rounded-2xl border border-ocean-100 bg-white transition-all hover:-translate-y-1 hover:shadow-xl" data-id={v.id}>
         <button
           type="button"
-          class="relative block aspect-video w-full overflow-hidden bg-ocean-900"
+          class:list={[
+            'relative block w-full overflow-hidden bg-ocean-900',
+            v.short ? 'aspect-[9/16]' : 'aspect-video',
+          ]}
           aria-label={`Play ${v.title}`}
         >
           <img
@@ -45,7 +53,7 @@ const { videos } = Astro.props;
       iframe.allow =
         'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
-      iframe.className = 'aspect-video w-full';
+      iframe.className = btn.classList.contains('aspect-[9/16]') ? 'aspect-[9/16] w-full' : 'aspect-video w-full';
       btn.replaceWith(iframe);
     });
   });

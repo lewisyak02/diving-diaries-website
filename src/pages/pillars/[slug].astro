@@ -3,10 +3,12 @@ import { Image } from 'astro:assets';
 import { getCollection, getEntry, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import PostCard from '../../components/PostCard.astro';
+import VideoGrid from '../../components/VideoGrid.astro';
 import Button from '../../components/Button.astro';
 import { PILLARS } from '../../lib/nav';
 import { SITE } from '../../lib/site';
 import { pillarImages } from '../../lib/pillarImages';
+import videoData from '../../content/videos/index.json';
 
 export async function getStaticPaths() {
   return PILLARS.map((p) => ({ params: { slug: p.slug }, props: { pillar: p } }));
@@ -19,6 +21,10 @@ const heroImage = pillarImages[pillar.slug];
 
 const posts = (await getCollection('journal', ({ data }) => !data.draft && data.pillar === pillar.slug))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const pillarVideos = (videoData.items ?? []).filter((v) => v.pillar === pillar.slug);
+const reelsOnly = pillarVideos.length > 0 && pillarVideos.every((v) => v.short);
+const hasContent = pillarVideos.length > 0 || posts.length > 0;
 ---
 
 <Layout
@@ -52,7 +58,7 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft && data.
   <!-- Long form content -->
   {
     Content && (
-      <section class="mx-auto max-w-3xl px-5 py-16">
+      <section class="mx-auto max-w-3xl px-5 pt-16">
         <div class="prose-dd space-y-5 text-lg leading-relaxed text-slate-700">
           <Content />
         </div>
@@ -60,26 +66,47 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft && data.
     )
   }
 
-  <!-- Posts in this pillar -->
-  <section class="mx-auto max-w-6xl px-5 pb-20">
-    {
-      posts.length > 0 ? (
-        <>
-          <h2 class="text-2xl text-ocean-800">Latest {pillar.label.toLowerCase()}</h2>
-          <div class="mt-8 grid gap-6 md:grid-cols-3">
-            {posts.map((p) => (
-              <PostCard
-                slug={p.id}
-                title={p.data.title}
-                date={p.data.date}
-                pillar={p.data.pillar}
-                excerpt={p.data.excerpt}
-                cover={p.data.cover}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
+  <!-- Videos in this pillar -->
+  {
+    pillarVideos.length > 0 && (
+      <section class="mx-auto max-w-6xl px-5 py-16">
+        <p class="kicker">{reelsOnly ? 'Reels' : 'Watch'}</p>
+        <h2 class="mt-3 text-3xl text-ocean-800">
+          {pillarVideos.length} {reelsOnly ? 'reels' : 'videos'}
+        </h2>
+        <div class="mt-8">
+          <VideoGrid videos={pillarVideos} reels={reelsOnly} />
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Journal posts in this pillar -->
+  {
+    posts.length > 0 && (
+      <section class="mx-auto max-w-6xl px-5 pb-20">
+        <p class="kicker">Read</p>
+        <h2 class="mt-3 text-3xl text-ocean-800">From the journal</h2>
+        <div class="mt-8 grid gap-6 md:grid-cols-3">
+          {posts.map((p) => (
+            <PostCard
+              slug={p.id}
+              title={p.data.title}
+              date={p.data.date}
+              pillar={p.data.pillar}
+              excerpt={p.data.excerpt}
+              cover={p.data.cover}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Empty state (no videos and no posts yet) -->
+  {
+    !hasContent && (
+      <section class="mx-auto max-w-6xl px-5 py-16">
         <div class="rounded-2xl border border-dashed border-ocean-200 bg-sand-50 p-10 text-center">
           <p class="text-slate-600">
             New {pillar.label.toLowerCase()} content is on the way. In the meantime,
@@ -89,7 +116,7 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft && data.
             <Button href={SITE.socials.youtube} external>Watch on YouTube</Button>
           </div>
         </div>
-      )
-    }
-  </section>
+      </section>
+    )
+  }
 </Layout>
