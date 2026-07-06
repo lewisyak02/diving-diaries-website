@@ -13,9 +13,9 @@ const totalViews = yt.views || 0;
 const comma = (n: number) => (n || 0).toLocaleString('en-AU');
 
 const platforms = [
-  { name: 'YouTube', metric: 'subscribers', value: yt.subscribers, note: `${comma(yt.views || 0)} total views`, href: SITE.socials.youtube },
-  { name: 'Instagram', metric: 'followers', value: ig.followers, note: null, href: SITE.socials.instagram },
-  { name: 'TikTok', metric: 'followers', value: tt.followers, note: null, href: SITE.socials.tiktok },
+  { name: 'YouTube', metric: 'subscribers', value: yt.subscribers, note: `${comma(yt.views || 0)} total views`, cta: 'Subscribe', href: SITE.socials.youtube },
+  { name: 'Instagram', metric: 'followers', value: ig.followers, note: null, cta: 'Follow', href: SITE.socials.instagram },
+  { name: 'TikTok', metric: 'followers', value: tt.followers, note: null, cta: 'Follow', href: SITE.socials.tiktok },
 ].filter((p) => p.href);
 
 const updated = community.updated
@@ -57,7 +57,7 @@ const updated = community.updated
             <p class="mt-1 text-xs uppercase tracking-wide text-slate-500">{p.metric}</p>
             {p.note && <p class="mt-3 text-sm text-slate-500">{p.note}</p>}
             <div class="mt-6">
-              <Button href={p.href} variant="outline" external>Follow</Button>
+              <Button href={p.href} variant="outline" external>{p.cta}</Button>
             </div>
           </div>
         ))
