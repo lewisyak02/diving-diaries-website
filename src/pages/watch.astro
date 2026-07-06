@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import VideoGrid from '../components/VideoGrid.astro';
+import ShowMore from '../components/ShowMore.astro';
 import { socialLinks } from '../lib/site';
 import videoData from '../content/videos/index.json';
 import watchBg from '../assets/watch-bg.jpg';
@@ -57,7 +58,9 @@ const videos = (videoData.items ?? []).filter((v) => !v.short);
     </div>
     {
       videos.length > 0 ? (
-        <VideoGrid videos={videos} />
+        <ShowMore initial={15} label="Show all dives">
+          <VideoGrid videos={videos} />
+        </ShowMore>
       ) : (
         <p class="text-center text-slate-600">Videos are on the way.</p>
       )

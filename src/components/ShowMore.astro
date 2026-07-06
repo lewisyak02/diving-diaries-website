@@ -1,0 +1,42 @@
+---
+// Wraps a grid and shows only the first `initial` items, revealing the rest with
+// a button. All items are still in the HTML (good for SEO); the extras are just
+// hidden until clicked.
+interface Props {
+  initial?: number;
+  label?: string;
+}
+const { initial = 15, label = 'Show more' } = Astro.props;
+---
+
+<div data-showmore data-initial={initial}>
+  <slot />
+  <div class="mt-10 text-center" data-showmore-actions>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center rounded-full border-2 border-ocean-600 px-8 py-3 text-sm font-bold uppercase tracking-wide text-ocean-600 transition-colors hover:bg-ocean-600 hover:text-white"
+    >
+      {label}
+    </button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-showmore]').forEach((box) => {
+    const initial = Number(box.dataset.initial) || 15;
+    const grid = box.querySelector('.grid');
+    const actions = box.querySelector<HTMLElement>('[data-showmore-actions]');
+    if (!grid || !actions) return;
+    const items = Array.from(grid.children);
+    if (items.length <= initial) {
+      actions.remove();
+      return;
+    }
+    const hidden = items.slice(initial);
+    hidden.forEach((el) => el.classList.add('hidden'));
+    actions.querySelector('button')?.addEventListener('click', () => {
+      hidden.forEach((el) => el.classList.remove('hidden'));
+      actions.remove();
+    });
+  });
+</script>

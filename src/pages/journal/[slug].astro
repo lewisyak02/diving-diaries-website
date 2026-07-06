@@ -13,6 +13,10 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const { title, date, pillar, excerpt, cover, youtube } = post.data;
 const dateStr = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+const watchLabel =
+  pillar === 'dive-site-reviews'
+    ? 'Watch the full review on YouTube'
+    : 'Watch the full dive on YouTube';
 ---
 
 <Layout title={title} description={excerpt} image={cover} type="article">
@@ -50,7 +54,7 @@ const dateStr = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long'
       {
         youtube && (
           <div class="mt-12 flex justify-center border-t border-ocean-100 pt-10">
-            <Button href={youtube} variant="primary" external>▶ Watch the full dive on YouTube</Button>
+            <Button href={youtube} variant="primary" external>▶ {watchLabel}</Button>
           </div>
         )
       }

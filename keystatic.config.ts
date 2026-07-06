@@ -38,6 +38,25 @@ export default config({
       },
     }),
 
+    community: singleton({
+      label: 'Community stats',
+      path: 'src/content/community/index',
+      format: { data: 'json' },
+      schema: {
+        updated: fields.text({ label: 'Last updated (YYYY-MM-DD)' }),
+        youtube: fields.object({
+          subscribers: fields.integer({ label: 'YouTube subscribers', defaultValue: 0 }),
+          views: fields.integer({ label: 'YouTube total views', defaultValue: 0 }),
+        }, { label: 'YouTube' }),
+        instagram: fields.object({
+          followers: fields.integer({ label: 'Instagram followers', defaultValue: 0 }),
+        }, { label: 'Instagram' }),
+        tiktok: fields.object({
+          followers: fields.integer({ label: 'TikTok followers', defaultValue: 0 }),
+        }, { label: 'TikTok' }),
+      },
+    }),
+
     encounters: singleton({
       label: 'Recent encounters (Home)',
       path: 'src/content/encounters/index',

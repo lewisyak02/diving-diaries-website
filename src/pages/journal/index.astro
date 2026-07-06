@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import PostCard from '../../components/PostCard.astro';
+import ShowMore from '../../components/ShowMore.astro';
 import { PILLARS } from '../../lib/nav';
 
 const posts = (await getCollection('journal', ({ data }) => !data.draft))
@@ -37,18 +38,20 @@ const posts = (await getCollection('journal', ({ data }) => !data.draft))
   <section class="mx-auto max-w-6xl px-5 py-16">
     {
       posts.length > 0 ? (
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((p) => (
-            <PostCard
-              slug={p.id}
-              title={p.data.title}
-              date={p.data.date}
-              pillar={p.data.pillar}
-              excerpt={p.data.excerpt}
-              cover={p.data.cover}
-            />
-          ))}
-        </div>
+        <ShowMore initial={15} label="Show all posts">
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((p) => (
+              <PostCard
+                slug={p.id}
+                title={p.data.title}
+                date={p.data.date}
+                pillar={p.data.pillar}
+                excerpt={p.data.excerpt}
+                cover={p.data.cover}
+              />
+            ))}
+          </div>
+        </ShowMore>
       ) : (
         <p class="text-center text-slate-600">The first journal entries are coming soon.</p>
       )

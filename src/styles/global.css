@@ -57,6 +57,25 @@
   }
 }
 
+/* Header logo: a playful wiggle on hover */
+.logo-anim img {
+  transition: transform 0.2s ease;
+  transform-origin: center;
+}
+.logo-anim:hover img {
+  animation: logo-wiggle 0.55s ease-in-out;
+}
+@keyframes logo-wiggle {
+  0%   { transform: rotate(0) scale(1); }
+  20%  { transform: rotate(-4deg) scale(1.06); }
+  45%  { transform: rotate(3deg) scale(1.06); }
+  70%  { transform: rotate(-2deg) scale(1.03); }
+  100% { transform: rotate(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-anim:hover img { animation: none; transform: scale(1.04); }
+}
+
 /* Small uppercase eyebrow / kicker label, a home for the brand purple */
 .kicker {
   font-family: var(--font-display);
