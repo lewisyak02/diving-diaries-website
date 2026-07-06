@@ -9,6 +9,7 @@ const journal = defineCollection({
     pillar: z.enum(['diary-entries', 'dive-site-reviews', 'fish-id', 'gear', 'tips']),
     excerpt: z.string().optional(),
     cover: z.string().optional(),
+    youtube: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });

@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import Button from '../../components/Button.astro';
 import { pillarLabel } from '../../lib/nav';
 
 export async function getStaticPaths() {
@@ -10,7 +11,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
-const { title, date, pillar, excerpt, cover } = post.data;
+const { title, date, pillar, excerpt, cover, youtube } = post.data;
 const dateStr = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
 
@@ -45,6 +46,14 @@ const dateStr = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long'
       <div class="prose-dd space-y-5 text-lg leading-relaxed text-slate-700">
         <Content />
       </div>
+
+      {
+        youtube && (
+          <div class="mt-12 flex justify-center border-t border-ocean-100 pt-10">
+            <Button href={youtube} variant="primary" external>▶ Watch the full dive on YouTube</Button>
+          </div>
+        )
+      }
     </div>
   </article>
 </Layout>
