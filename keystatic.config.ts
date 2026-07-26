@@ -35,6 +35,7 @@ export default config({
         youtube: fields.url({ label: 'YouTube URL' }),
         instagram: fields.url({ label: 'Instagram URL' }),
         tiktok: fields.url({ label: 'TikTok URL' }),
+        facebook: fields.url({ label: 'Facebook URL' }),
       },
     }),
 

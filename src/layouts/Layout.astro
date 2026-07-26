@@ -3,6 +3,7 @@ import '../styles/global.css';
 import SEO from '../components/SEO.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Loader from '../components/Loader.astro';
 
 interface Props {
   title?: string;
@@ -29,6 +30,7 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
     <SEO title={title} description={description} image={image} noindex={noindex} type={type} />
   </head>
   <body class="flex min-h-screen flex-col">
+    {!bare && <Loader />}
     {!bare && <Header />}
     <main class="flex-1">
       <slot />

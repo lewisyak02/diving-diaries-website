@@ -69,6 +69,27 @@
   .logo-anim:hover img { transform: none; }
 }
 
+/* Full-screen loading buffer (3D logo spin) */
+#dd-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0b0b10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+#dd-loader video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#dd-loader.dd-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Small uppercase eyebrow / kicker label, a home for the brand purple */
 .kicker {
   font-family: var(--font-display);

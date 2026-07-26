@@ -15,11 +15,12 @@ export const SITE = {
     'Dive diaries, dive site reviews, fish ID, gear and tips from an Australian PADI Divemaster.',
   description:
     'Diving Diaries is an underwater adventure content brand from a PADI Divemaster diving all around Australia. Cinematic diary entries, dive site reviews, a fish ID series, gear and tips. Sharing the beauty of the underwater world.',
-  email: siteData.email ?? 'lewisyak02@gmail.com',
+  email: siteData.email ?? 'divingdiariesau@gmail.com',
   socials: {
     youtube: siteData.youtube || null,
     instagram: siteData.instagram || null,
     tiktok: siteData.tiktok || null,
+    facebook: (siteData as { facebook?: string }).facebook || null,
   },
 } as const;
 
@@ -29,6 +30,7 @@ export const socialLinks = (
     { label: 'YouTube', href: SITE.socials.youtube },
     { label: 'Instagram', href: SITE.socials.instagram },
     { label: 'TikTok', href: SITE.socials.tiktok },
+    { label: 'Facebook', href: SITE.socials.facebook },
   ] as { label: string; href: string | null }[]
 ).filter((s): s is { label: string; href: string } => Boolean(s.href));
 
