@@ -1,8 +1,9 @@
 {
   "items": [
-    { "image": "/images/encounters/green-turtle.jpg", "caption": "Green turtle" },
-    { "image": "/images/encounters/cowfish.jpg", "caption": "Cowfish" },
-    { "image": "/images/encounters/reef-descent.jpg", "caption": "Reef descent" },
+    { "image": "/images/encounters/fiddler-ray.jpg", "caption": "Fiddler Ray" },
+    { "image": "/images/encounters/wobbegong.jpg", "caption": "Wobbegong" },
+    { "image": "/images/encounters/bumphead-wrasse.jpg", "caption": "Bumphead Wrasse" },
+    { "image": "/images/encounters/diver-descent.jpg", "caption": "Diver Descent" },
     { "image": "/images/encounters/anemonefish.jpg", "caption": "Anemonefish" }
   ]
 }

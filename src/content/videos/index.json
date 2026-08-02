@@ -1,6 +1,24 @@
 {
   "items": [
     {
+      "title": "Toyota Hiace Campervan (Scubavan) Conversion | Ep 4",
+      "id": "VLGXTs5OORw",
+      "pillar": "none",
+      "short": false
+    },
+    {
+      "title": "Milln Reef - 20.06.2026 | Entry #41",
+      "id": "ZFUKPKVZRkY",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
+      "title": "Shelly Beach - 08.06.2026 | Entry #40",
+      "id": "9hYhST8vssE",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
       "title": "Shelly Beach - 07.06.2026 | Entry #39",
       "id": "91rAJLbb4tc",
       "pillar": "diary-entries",
@@ -257,6 +275,24 @@
       "id": "Zg42vjBSsCg",
       "pillar": "diary-entries",
       "short": false
+    },
+    {
+      "title": "Eastern Fiddler Ray",
+      "id": "SIWlEfDs4aI",
+      "pillar": "fish-id",
+      "short": true
+    },
+    {
+      "title": "Barrier Reef Anemonefish",
+      "id": "5fkdN0mRMgQ",
+      "pillar": "fish-id",
+      "short": true
+    },
+    {
+      "title": "Bottlenose Dolphin",
+      "id": "Mw7T4o94Aw8",
+      "pillar": "fish-id",
+      "short": true
     },
     {
       "title": "Bull Shark",
