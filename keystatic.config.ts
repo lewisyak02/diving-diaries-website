@@ -120,6 +120,33 @@ export default config({
   },
 
   collections: {
+    products: collection({
+      label: 'Shop products',
+      slugField: 'name',
+      path: 'src/content/products/*',
+      format: { data: 'json' },
+      columns: ['name', 'price'],
+      schema: {
+        name: fields.slug({ name: { label: 'Product name' } }),
+        price: fields.text({
+          label: 'Price (AUD)',
+          description: 'Just the number, e.g. 5 or 5.00',
+        }),
+        image: fields.image({
+          label: 'Product photo',
+          directory: 'public/images/shop',
+          publicPath: '/images/shop/',
+        }),
+        description: fields.text({ label: 'Description', multiline: true }),
+        buyUrl: fields.url({
+          label: 'Buy link (checkout URL)',
+          description: 'Paste the Stripe Payment Link (or other checkout URL) here. Leave empty to show "Coming soon".',
+        }),
+        soldOut: fields.checkbox({ label: 'Sold out', defaultValue: false }),
+        order: fields.integer({ label: 'Order', defaultValue: 1 }),
+      },
+    }),
+
     journal: collection({
       label: 'Journal',
       slugField: 'title',

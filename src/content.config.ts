@@ -24,4 +24,17 @@ const pillars = defineCollection({
   }),
 });
 
-export const collections = { journal, pillars };
+const products = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/products' }),
+  schema: z.object({
+    name: z.string(),
+    price: z.string().optional(),
+    image: z.string().optional(),
+    description: z.string().optional(),
+    buyUrl: z.string().optional(),
+    soldOut: z.boolean().default(false),
+    order: z.number().default(1),
+  }),
+});
+
+export const collections = { journal, pillars, products };
