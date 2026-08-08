@@ -138,6 +138,9 @@ export default config({
           publicPath: '/images/shop/',
         }),
         description: fields.text({ label: 'Description', multiline: true }),
+        size: fields.text({ label: 'Size', description: 'e.g. 77mm diameter, or 83 x 24mm' }),
+        finish: fields.text({ label: 'Finish / options', description: 'e.g. Holographic glossy, or Transparent / White / Drop-shadow' }),
+        holographic: fields.checkbox({ label: 'Holographic (adds shimmer effect)', defaultValue: false }),
         buyUrl: fields.url({
           label: 'Buy link (checkout URL)',
           description: 'Paste the Stripe Payment Link (or other checkout URL) here. Leave empty to show "Coming soon".',

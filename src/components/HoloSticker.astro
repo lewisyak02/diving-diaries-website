@@ -1,0 +1,54 @@
+---
+// Interactive sticker viewer: tilts in 3D as you move over it, and holographic
+// stickers get a rainbow sheen that shifts with the cursor (or device tilt on
+// mobile). A photo-based stand-in for a full 360 spin.
+interface Props {
+  src: string;
+  alt: string;
+  holographic?: boolean;
+  class?: string;
+}
+const { src, alt, holographic = false, class: klass = '' } = Astro.props;
+---
+<div class:list={['holo-card', holographic && 'is-holo', klass]}>
+  <div class="holo-card__inner">
+    <img src={src} alt={alt} loading="lazy" />
+    <div class="holo-card__shine"></div>
+    <div class="holo-card__glare"></div>
+  </div>
+</div>
+
+<script>
+  if (!(window as any).__holoInit) {
+    (window as any).__holoInit = true;
+    const set = (card: HTMLElement, px: number, py: number, on: boolean) => {
+      card.style.setProperty('--rx', ((0.5 - py) * 14).toFixed(2) + 'deg');
+      card.style.setProperty('--ry', ((px - 0.5) * 14).toFixed(2) + 'deg');
+      card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+      card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+      card.style.setProperty('--op', on ? '1' : '0');
+    };
+    const reset = (card: HTMLElement) => {
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+      card.style.setProperty('--op', '0');
+    };
+    document.addEventListener('pointermove', (e) => {
+      const card = (e.target as HTMLElement).closest?.('.holo-card') as HTMLElement | null;
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      set(card, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, true);
+    });
+    document.addEventListener('pointerleave', (e) => {
+      const card = (e.target as HTMLElement).closest?.('.holo-card') as HTMLElement | null;
+      if (card) reset(card);
+    }, true);
+    // Device orientation for a live shimmer on mobile
+    window.addEventListener('deviceorientation', (e) => {
+      const g = e.gamma ?? 0, b = e.beta ?? 0;
+      document.querySelectorAll<HTMLElement>('.holo-card.is-holo').forEach((card) => {
+        set(card, Math.min(1, Math.max(0, 0.5 + g / 45)), Math.min(1, Math.max(0, 0.5 + (b - 45) / 45)), true);
+      });
+    });
+  }
+</script>
