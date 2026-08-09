@@ -83,16 +83,18 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 
 ## Open items / TODO
 
-- **Shop / Stripe:** 4 sticker products exist (Circle Holographic + Front Adhesive Small/Medium/
-  Large) with **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe
-  Payment Links** per product and pastes them into each product's `buyUrl` (finish options via
-  a Stripe custom dropdown).
-- **Sticker artwork:** 3 of 4 products now render from the **real artwork** through the live
-  WebGL viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`;
-  Small + Medium = decal material from `dd-wordmark-white.png`. **Front Adhesive Large is the
-  only one still on an AI mockup** — its "Black background" design was never supplied. If that
-  is just the same wordmark on a black plate, it is a config change, not new artwork.
-  No more AI mockups: the renderer draws his files directly.
+- **Shop / Stripe:** 3 sticker products (Circle Holographic + Front Adhesive Small/Medium) with
+  **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe Payment Links**
+  per product and pastes them into each product's `buyUrl` (finish options via a Stripe custom
+  dropdown). The on-card finish buttons are a **preview only** and carry nothing to checkout.
+- **Sticker artwork:** every product renders from the **real artwork** through the live WebGL
+  viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`; Small +
+  Medium = decal material from `dd-wordmark-white.png`, switchable White / Drop shadow.
+  No AI mockups anywhere: the renderer draws his files directly. Front Adhesive Large was
+  removed (Aug 2026) because he did not like it.
+- **Card backdrop** is a deliberate mid tone (`.sticker-backdrop`): white ink vanishes on a
+  light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
+  `bg-ocean-900`.
 - **Activate the CMS** (GitHub App + env vars) when Lewis wants browser editing.
 - **Point the domain** `divingdiaries.au` at Netlify.
 - **Instagram/TikTok live stats:** not feasible without their official APIs; maintained by hand in

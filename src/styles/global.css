@@ -69,6 +69,14 @@
   .logo-anim:hover img { transform: none; }
 }
 
+/* Product card backdrop for the sticker viewer.
+   A mid tone on purpose: white ink disappears on a light background and a dark
+   drop shadow disappears on a dark one, so neither extreme shows both finishes.
+   The soft radial reads like a studio backdrop and lifts the sticker off it. */
+.sticker-backdrop {
+  background: radial-gradient(circle at 50% 42%, #4d6d9e 0%, #35527f 45%, #24395f 100%);
+}
+
 /* Small uppercase eyebrow / kicker label, a home for the brand purple */
 .kicker {
   font-family: var(--font-display);

@@ -38,7 +38,7 @@ const products = (await getCollection('products')).sort(
             const surface = material ?? (holographic ? 'holo' : 'matte');
             return (
               <article class="flex flex-col overflow-hidden rounded-2xl border border-ocean-100 bg-white transition-all hover:shadow-xl">
-                <div class="aspect-square bg-ocean-900" data-sticker-card>
+                <div class="sticker-backdrop aspect-square" data-sticker-card>
                   {texture && (
                     <HoloSticker
                       src={texture}
