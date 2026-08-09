@@ -1,0 +1,333 @@
+import { VERT, FRAG } from './shaders';
+
+export type Material = 'holo' | 'matte';
+export type DieCut = 'circle' | 'none';
+
+export interface HoloOptions {
+  src: string;
+  material: Material;
+  dieCut: DieCut;
+  intensity: number;
+  hueScale: number;
+  tileScale: number;
+  grain: number;
+}
+
+const DEG = Math.PI / 180;
+const MAX_YAW = 60 * DEG;
+const MAX_TILT = 15 * DEG;
+const NUDGE = 5 * DEG;
+const SPRING_MS = 600;
+const IDLE_AMP = 8 * DEG;
+const GRID = 24; // plane subdivisions, enough for the bow to read
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+function compile(gl: WebGLRenderingContext, type: number, src: string) {
+  const sh = gl.createShader(type)!;
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    const log = gl.getShaderInfoLog(sh);
+    gl.deleteShader(sh);
+    throw new Error('shader compile failed: ' + log);
+  }
+  return sh;
+}
+
+/** Tessellated -1..1 plane as a triangle strip friendly index list. */
+function planeGeometry() {
+  const pos: number[] = [];
+  const idx: number[] = [];
+  for (let y = 0; y <= GRID; y++) {
+    for (let x = 0; x <= GRID; x++) {
+      pos.push((x / GRID) * 2 - 1, (y / GRID) * 2 - 1);
+    }
+  }
+  const row = GRID + 1;
+  for (let y = 0; y < GRID; y++) {
+    for (let x = 0; x < GRID; x++) {
+      const a = y * row + x;
+      idx.push(a, a + 1, a + row, a + 1, a + row + 1, a + row);
+    }
+  }
+  return { pos: new Float32Array(pos), idx: new Uint16Array(idx) };
+}
+
+/**
+ * Live WebGL sticker. Returns null when WebGL or the texture is unavailable so
+ * the caller can fall back rather than leaving a blank box on the page.
+ */
+export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOptions) {
+  const gl = (canvas.getContext('webgl', {
+    alpha: true,
+    antialias: true,
+    premultipliedAlpha: false,
+    depth: false,
+  }) || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+  if (!gl) return null;
+
+  const image = await new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = opts.src;
+  });
+  if (!image) return null;
+
+  const prog = gl.createProgram()!;
+  gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+  gl.useProgram(prog);
+
+  const { pos, idx } = planeGeometry();
+  const vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const ibo = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  const pot = (n: number) => (n & (n - 1)) === 0;
+  if (pot(image.naturalWidth) && pot(image.naturalHeight)) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+  } else {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  }
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+
+  const U = (n: string) => gl.getUniformLocation(prog, n);
+  const u = {
+    theta: U('uTheta'), tilt: U('uTilt'), bow: U('uBow'), dist: U('uDist'),
+    scale: U('uScale'), aspect: U('uAspect'), tex: U('uTex'),
+    intensity: U('uIntensity'), hueScale: U('uHueScale'), material: U('uMaterial'),
+    dieCut: U('uDieCut'), tileScale: U('uTileScale'), blur: U('uBlur'),
+    aa: U('uAA'), grain: U('uGrain'), seed: U('uSeed'),
+  };
+
+  gl.uniform1i(u.tex, 0);
+  gl.uniform1f(u.intensity, opts.intensity);
+  gl.uniform1f(u.hueScale, opts.hueScale);
+  gl.uniform1f(u.material, opts.material === 'holo' ? 0 : 1);
+  gl.uniform1f(u.dieCut, opts.dieCut === 'circle' ? 0 : 1);
+  gl.uniform1f(u.tileScale, opts.tileScale);
+  gl.uniform1f(u.grain, opts.grain);
+  gl.uniform1f(u.seed, Math.random() * 100);
+  // Camera distance d = 2.6 x diameter. The plane spans -1..1, so the
+  // diameter is 2 units and d works out at 5.2.
+  gl.uniform1f(u.dist, 2.6 * 2);
+  gl.uniform1f(u.bow, 0.055);
+
+  // A die cut circle needs room around it for the rim and the tilt; a full
+  // bleed rectangle should sit as close to the frame as rotation allows.
+  const fit = opts.dieCut === 'circle' ? 0.88 : 0.98;
+
+  // --- state -------------------------------------------------------------
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let yaw = 0;
+  let tilt = 0;
+  let dragging = false;
+  let touched = reduced; // reduced motion starts with the idle drift already off
+  let pointerId: number | null = null;
+  let startX = 0, startY = 0, startYaw = 0, startTilt = 0;
+  let springFrom = 0, springFromTilt = 0, springAt = 0, springing = false;
+  let visible = true;
+  let raf = 0;
+  let dpr = 1;
+  let cssSize = 0;
+  const t0 = performance.now();
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const side = Math.max(1, Math.min(rect.width, rect.height));
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const px = Math.round(side * dpr);
+    if (px === canvas.width && side === cssSize) return;
+    cssSize = side;
+    canvas.width = px;
+    canvas.height = px;
+    gl.viewport(0, 0, px, px);
+    // 0.8px gaussian, and the die cut edge, both expressed in the units the
+    // shader works in so they stay a constant width on screen at any size.
+    gl.uniform1f(u.blur, 0.8 / px / opts.tileScale);
+    gl.uniform1f(u.aa, 2.0 / px * dpr);
+  }
+
+  function draw() {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(u.theta, yaw);
+    gl.uniform1f(u.tilt, tilt);
+    gl.uniform1f(u.scale, fit);
+    gl.uniform2f(u.aspect, 1, 1);
+    gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
+  }
+
+  function frame(now: number) {
+    raf = 0;
+    if (!visible) return;
+    resize();
+
+    if (springing) {
+      const t = clamp((now - springAt) / SPRING_MS, 0, 1);
+      const e = easeOutCubic(t);
+      yaw = springFrom * (1 - e);
+      tilt = springFromTilt * (1 - e);
+      if (t >= 1) springing = false;
+    } else if (!dragging && !touched) {
+      // Idle drift before the first interaction only.
+      yaw = Math.sin((now - t0) / 1900) * IDLE_AMP;
+      tilt = Math.sin((now - t0) / 3100) * (IDLE_AMP * 0.25);
+    }
+
+    draw();
+    if (springing || (!dragging && !touched)) schedule();
+  }
+
+  function schedule() {
+    if (!raf && visible) raf = requestAnimationFrame(frame);
+  }
+
+  function settle() {
+    if (reduced) {
+      yaw = 0;
+      tilt = 0;
+      springing = false;
+      schedule();
+      return;
+    }
+    springFrom = yaw;
+    springFromTilt = tilt;
+    springAt = performance.now();
+    springing = true;
+    schedule();
+  }
+
+  // --- interaction -------------------------------------------------------
+  function applyFromPointer(clientX: number, clientY: number) {
+    const rect = canvas.getBoundingClientRect();
+    // 1:1 with the pointer: a full traverse of the element covers the range.
+    yaw = clamp(startYaw + ((clientX - startX) / rect.width) * (MAX_YAW * 2), -MAX_YAW, MAX_YAW);
+    tilt = clamp(startTilt + ((clientY - startY) / rect.height) * (MAX_TILT * 2), -MAX_TILT, MAX_TILT);
+  }
+
+  const onDown = (e: PointerEvent) => {
+    if (pointerId !== null) return;
+    pointerId = e.pointerId;
+    dragging = true;
+    touched = true;
+    springing = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    startYaw = yaw;
+    startTilt = tilt;
+    canvas.setPointerCapture(e.pointerId);
+    schedule();
+  };
+
+  const onMove = (e: PointerEvent) => {
+    if (dragging && e.pointerId === pointerId) {
+      applyFromPointer(e.clientX, e.clientY);
+      schedule();
+      return;
+    }
+    // Hover tracking on precise pointers, so it reacts before you press.
+    if (!dragging && e.pointerType === 'mouse') {
+      touched = true;
+      springing = false;
+      const rect = canvas.getBoundingClientRect();
+      yaw = clamp(((e.clientX - rect.left) / rect.width - 0.5) * 2 * MAX_YAW, -MAX_YAW, MAX_YAW);
+      tilt = clamp(((e.clientY - rect.top) / rect.height - 0.5) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+      schedule();
+    }
+  };
+
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    dragging = false;
+    pointerId = null;
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    settle();
+  };
+
+  const onLeave = () => {
+    if (!dragging) settle();
+  };
+
+  const onKey = (e: KeyboardEvent) => {
+    let dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft') dx = -1;
+    else if (e.key === 'ArrowRight') dx = 1;
+    else if (e.key === 'ArrowUp') dy = -1;
+    else if (e.key === 'ArrowDown') dy = 1;
+    else return;
+    e.preventDefault();
+    touched = true;
+    springing = false;
+    yaw = clamp(yaw + dx * NUDGE, -MAX_YAW, MAX_YAW);
+    tilt = clamp(tilt + dy * NUDGE, -MAX_TILT, MAX_TILT);
+    schedule();
+  };
+
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('pointerleave', onLeave);
+  canvas.addEventListener('keydown', onKey);
+  canvas.addEventListener('blur', onLeave);
+
+  // Pause off screen and on a hidden tab.
+  const io = new IntersectionObserver((entries) => {
+    visible = entries[0].isIntersecting && !document.hidden;
+    if (visible) schedule();
+    else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  }, { threshold: 0 });
+  io.observe(canvas);
+
+  const onVisibility = () => {
+    if (document.hidden) {
+      visible = false;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    } else {
+      visible = true;
+      schedule();
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+
+  const ro = new ResizeObserver(() => schedule());
+  ro.observe(canvas);
+
+  resize();
+  draw();
+  schedule();
+
+  return {
+    destroy() {
+      io.disconnect();
+      ro.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (raf) cancelAnimationFrame(raf);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    },
+  };
+}

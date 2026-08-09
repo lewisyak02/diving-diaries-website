@@ -30,6 +30,12 @@ const products = defineCollection({
     name: z.string(),
     price: z.string().optional(),
     image: z.string().optional(),
+    // Source artwork the sticker viewer renders. Falls back to `image`.
+    artwork: z.string().optional(),
+    // Die cut shape applied by the renderer, not baked into the artwork.
+    dieCut: z.enum(['circle', 'none']).default('none'),
+    // Short sentence describing the sticker, used as the viewer's alt text.
+    altText: z.string().optional(),
     description: z.string().optional(),
     size: z.string().optional(),
     finish: z.string().optional(),

@@ -1,7 +1,10 @@
 {
   "name": "Circle Holographic",
   "price": "",
-  "image": "/images/shop/circle-holographic.jpg",
+  "image": "/stickers/dd-circle-poster.webp",
+  "artwork": "/stickers/dd-tile.png",
+  "dieCut": "circle",
+  "altText": "A 77mm circular holographic sticker, repeating DDIARIES wordmarks in purple ink over rainbow foil. Drag it to shift the colours.",
   "description": "A 77mm holographic glossy circle. The rainbow foil catches the light and shifts colour as it moves, so it never looks the same twice.",
   "size": "77mm diameter",
   "finish": "Holographic glossy",

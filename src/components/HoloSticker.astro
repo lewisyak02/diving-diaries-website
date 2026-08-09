@@ -1,54 +1,174 @@
 ---
-// Interactive sticker viewer: tilts in 3D as you move over it, and holographic
-// stickers get a rainbow sheen that shifts with the cursor (or device tilt on
-// mobile). A photo-based stand-in for a full 360 spin.
+// Live sticker viewer. The holographic path derives its foil mask from the
+// artwork's own luminance, so white regions read as rainbow substrate and
+// printed ink stays its own colour. Matte is the same renderer with the
+// material switched, for transfer decals that have no foil.
+//
+// Renders a static poster first and swaps the canvas in underneath it once
+// WebGL is ready, so there is no layout shift and never a blank box.
 interface Props {
-  src: string;
+  src: string;              // texture: the artwork the renderer draws
   alt: string;
-  holographic?: boolean;
+  poster?: string;          // static image shown until the canvas is live
+  material?: 'holo' | 'matte';
+  dieCut?: 'circle' | 'none';
+  intensity?: number;
+  hueScale?: number;
+  tileScale?: number;
+  grain?: number;
   class?: string;
 }
-const { src, alt, holographic = false, class: klass = '' } = Astro.props;
+const {
+  src,
+  alt,
+  poster,
+  material = 'matte',
+  dieCut = 'none',
+  intensity = 0.9,
+  hueScale = 1,
+  tileScale = material === 'holo' ? 1.15 : 1,
+  grain = material === 'holo' ? 0.05 : 0,
+  class: klass = '',
+} = Astro.props;
 ---
-<div class:list={['holo-card', holographic && 'is-holo', klass]}>
-  <div class="holo-card__inner">
-    <img src={src} alt={alt} loading="lazy" />
-    <div class="holo-card__shine"></div>
-    <div class="holo-card__glare"></div>
-  </div>
+
+<div
+  class:list={['holo-stage', klass]}
+  data-holo
+  data-src={src}
+  data-material={material}
+  data-die-cut={dieCut}
+  data-intensity={String(intensity)}
+  data-hue-scale={String(hueScale)}
+  data-tile-scale={String(tileScale)}
+  data-grain={String(grain)}
+>
+  <img class="holo-stage__poster" src={poster ?? src} alt={alt} loading="lazy" decoding="async" />
+  <canvas class="holo-stage__canvas" tabindex="0" role="img" aria-label={alt}></canvas>
 </div>
 
-<script>
-  if (!(window as any).__holoInit) {
-    (window as any).__holoInit = true;
-    const set = (card: HTMLElement, px: number, py: number, on: boolean) => {
-      card.style.setProperty('--rx', ((0.5 - py) * 14).toFixed(2) + 'deg');
-      card.style.setProperty('--ry', ((px - 0.5) * 14).toFixed(2) + 'deg');
-      card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
-      card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
-      card.style.setProperty('--op', on ? '1' : '0');
-    };
-    const reset = (card: HTMLElement) => {
-      card.style.setProperty('--rx', '0deg');
-      card.style.setProperty('--ry', '0deg');
-      card.style.setProperty('--op', '0');
-    };
-    document.addEventListener('pointermove', (e) => {
-      const card = (e.target as HTMLElement).closest?.('.holo-card') as HTMLElement | null;
-      if (!card) return;
-      const r = card.getBoundingClientRect();
-      set(card, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, true);
-    });
-    document.addEventListener('pointerleave', (e) => {
-      const card = (e.target as HTMLElement).closest?.('.holo-card') as HTMLElement | null;
-      if (card) reset(card);
-    }, true);
-    // Device orientation for a live shimmer on mobile
-    window.addEventListener('deviceorientation', (e) => {
-      const g = e.gamma ?? 0, b = e.beta ?? 0;
-      document.querySelectorAll<HTMLElement>('.holo-card.is-holo').forEach((card) => {
-        set(card, Math.min(1, Math.max(0, 0.5 + g / 45)), Math.min(1, Math.max(0, 0.5 + (b - 45) / 45)), true);
-      });
-    });
+<style>
+  .holo-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* reserved up front, so nothing shifts */
+    overflow: hidden;
   }
+  .holo-stage__poster,
+  .holo-stage__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .holo-stage__poster {
+    object-fit: cover;
+    transition: opacity 0.35s ease;
+  }
+  .holo-stage__canvas {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    /* Vertical page scroll stays with the page; horizontal drag is ours. */
+    touch-action: pan-y;
+    cursor: grab;
+    outline: none;
+  }
+  .holo-stage__canvas:active { cursor: grabbing; }
+  .holo-stage__canvas:focus-visible {
+    outline: 3px solid var(--color-purple-400, #8f88e8);
+    outline-offset: -3px;
+  }
+  .holo-stage.is-live .holo-stage__canvas { opacity: 1; }
+  .holo-stage.is-live .holo-stage__poster { opacity: 0; }
+
+  /* No WebGL: CSS 3D transform plus a layered gradient, driven by the same
+     angle the shader would have used. Falls back to the poster on its own if
+     the image is all there is. */
+  .holo-stage.is-css .holo-stage__poster {
+    transform: perspective(900px) rotateY(var(--theta, 0deg)) rotateX(var(--tilt, 0deg));
+    transition: transform 0.12s linear;
+  }
+  .holo-stage.is-css.is-holo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      118deg,
+      rgba(255, 255, 255, 0) 18%,
+      rgba(255, 176, 224, 0.55),
+      rgba(168, 226, 255, 0.55),
+      rgba(190, 255, 205, 0.55),
+      rgba(255, 244, 176, 0.55),
+      rgba(255, 255, 255, 0) 82%
+    );
+    background-size: 240% 240%;
+    background-position: var(--sweep, 50%) 50%;
+    mix-blend-mode: soft-light;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .holo-stage.is-css .holo-stage__poster { transition: none; }
+  }
+</style>
+
+<script>
+  import { createHoloViewer } from '../lib/holo/viewer';
+
+  const stages = document.querySelectorAll<HTMLElement>('[data-holo]');
+
+  // CSS 3D fallback, driven by the same theta the shader takes.
+  function cssFallback(stage: HTMLElement) {
+    stage.classList.add('is-css');
+    if (stage.dataset.material === 'holo') stage.classList.add('is-holo');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    stage.addEventListener('pointermove', (e) => {
+      const r = stage.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      stage.style.setProperty('--theta', ((px - 0.5) * 120).toFixed(2) + 'deg');
+      stage.style.setProperty('--tilt', ((0.5 - py) * 30).toFixed(2) + 'deg');
+      stage.style.setProperty('--sweep', (px * 100).toFixed(1) + '%');
+    });
+    stage.addEventListener('pointerleave', () => {
+      stage.style.setProperty('--theta', '0deg');
+      stage.style.setProperty('--tilt', '0deg');
+    });
+    if (reduced) stage.style.setProperty('--theta', '0deg');
+  }
+
+  // Only build the GL context once the card is near the viewport.
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const stage = entry.target as HTMLElement;
+        io.unobserve(stage);
+        init(stage);
+      }
+    },
+    { rootMargin: '200px' }
+  );
+
+  async function init(stage: HTMLElement) {
+    const canvas = stage.querySelector<HTMLCanvasElement>('.holo-stage__canvas');
+    if (!canvas) return;
+    try {
+      const viewer = await createHoloViewer(canvas, {
+        src: stage.dataset.src!,
+        material: stage.dataset.material === 'holo' ? 'holo' : 'matte',
+        dieCut: stage.dataset.dieCut === 'circle' ? 'circle' : 'none',
+        intensity: Number(stage.dataset.intensity ?? 0.9),
+        hueScale: Number(stage.dataset.hueScale ?? 1),
+        tileScale: Number(stage.dataset.tileScale ?? 1),
+        grain: Number(stage.dataset.grain ?? 0),
+      });
+      if (viewer) stage.classList.add('is-live');
+      else cssFallback(stage);
+    } catch {
+      cssFallback(stage);
+    }
+  }
+
+  stages.forEach((s) => io.observe(s));
 </script>
