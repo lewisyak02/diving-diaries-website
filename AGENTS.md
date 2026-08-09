@@ -73,7 +73,11 @@ strip), `site` (index.json settings), `products` (one .json per shop product).
 ## House style
 
 **No em dashes and no hyphenated compounds in user-facing copy** (Lewis: "hyphens scream AI").
-First person, his voice. Tagline "Sharing the beauty of the underwater world"; catchphrase
+
+**Two voices, deliberately.** The **journal is first person, his voice** — that is the whole
+point of it, so never convert journal posts to brand voice. The **brand pages** (About, the
+homepage mission band) speak as Diving Diaries: "we/our", or the brand by name. Pillar blurbs
+stay first person, since they describe the dives he does. Tagline "Sharing the beauty of the underwater world"; catchphrase
 "Let's see what we can see". Socials: YouTube @LewisKayDives, Instagram + TikTok @divingdiaries.au,
 a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Action 5 Pro.
 

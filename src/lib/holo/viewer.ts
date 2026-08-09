@@ -428,6 +428,12 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     setFit(v: number) {
       fit = v;
     },
+    /** Switch a decal between its white and drop shadow finishes. */
+    setDropShadow(on: boolean) {
+      gl.uniform1f(u.dropShadow, on ? 1 : 0);
+      draw();
+      schedule();
+    },
     setAngle(yawDeg: number, tiltDeg = 0) {
       touched = true;
       springing = false;

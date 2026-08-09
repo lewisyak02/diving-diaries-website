@@ -4,15 +4,24 @@
   "image": "/products/front-adhesive-medium/front-adhesive-medium--poster.webp",
   "artwork": "/stickers/dd-wordmark-white.png",
   "material": "decal",
-  "dropShadow": true,
+  "dropShadow": false,
   "dieCut": "none",
-  "altText": "An 83mm front adhesive DDIARIES decal, the wordmark in white ink with a drop shadow finish on clear film. Drag it to tilt it in the light.",
-  "description": "The everyday size. A front adhesive logo that looks clean on drink bottles, laptops, and dive gear. Choose transparent, white, or a drop shadow finish.",
+  "altText": "An 83mm front adhesive DDIARIES decal, the wordmark in white ink on clear film. Drag it to tilt it in the light.",
+  "description": "The everyday size. A front adhesive logo that sits flat on car windows, laptop cases, and glass doors, facing out so it reads from the other side. Choose white or a drop shadow finish.",
   "size": "83 x 24mm",
-  "finish": "Transparent, White, or Drop shadow",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 3,
-  "spin": "/products/front-adhesive-medium/front-adhesive-medium--spin.json"
+  "spin": "/products/front-adhesive-medium/front-adhesive-medium--spin.json",
+  "finishes": [
+    {
+      "label": "White",
+      "dropShadow": false
+    },
+    {
+      "label": "Drop shadow",
+      "dropShadow": true
+    }
+  ]
 }

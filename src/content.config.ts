@@ -38,6 +38,11 @@ const products = defineCollection({
     material: z.enum(['holo', 'matte', 'decal']).optional(),
     // Decal only: preview the drop shadow finish instead of plain white.
     dropShadow: z.boolean().default(false),
+    // Switchable finishes. The card renders these as buttons and the viewer
+    // redraws, so the finish can be seen rather than just read about.
+    finishes: z
+      .array(z.object({ label: z.string(), dropShadow: z.boolean().default(false) }))
+      .optional(),
     // Pre rendered scrub sequence manifest, for low power devices.
     spin: z.string().optional(),
     // Short sentence describing the sticker, used as the viewer's alt text.

@@ -311,7 +311,17 @@ const {
         tileScale: Number(stage.dataset.tileScale ?? 1),
         grain: Number(stage.dataset.grain ?? 0),
       });
-      if (viewer) { stage.classList.add('is-live'); return; }
+      if (viewer) {
+        stage.classList.add('is-live');
+        // Let the card switch finishes without knowing anything about WebGL.
+        // Only set once a live viewer exists, so a control cannot promise a
+        // switch that the fallback tiers could not deliver.
+        stage.dataset.canSwitch = '1';
+        stage.addEventListener('holo:finish', (e) => {
+          viewer.setDropShadow(!!(e as CustomEvent).detail?.dropShadow);
+        });
+        return;
+      }
     } catch {
       /* fall through to the cheaper tiers */
     }
