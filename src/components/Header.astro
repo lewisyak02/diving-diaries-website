@@ -13,8 +13,9 @@ const isActive = (href: string) =>
   >
     <Wordmark type="long" variant="light" size="sm" href="/" class="logo-anim" />
 
-    <!-- Tabs: the few most used destinations -->
-    <ul class="hidden items-center gap-1 md:flex">
+    <!-- Tabs: the few most used destinations. ml-auto keeps them over on the
+         right with the menu button rather than floating in the middle. -->
+    <ul class="ml-auto hidden items-center gap-1 md:flex">
       {
         TAB_NAV.map((n) => (
           <li>
