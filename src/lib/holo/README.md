@@ -53,6 +53,12 @@ All on `<HoloSticker />`.
 | `hueScale` | `1` | Per product hue tuning. Higher packs more colour bands across the sticker. |
 | `tileScale` | `1.15` holo, `1` matte | Tile drawn at this multiple of the die diameter, then centre cropped. 1.15 gives roughly three badge rows across, matching the printed product. |
 | `grain` | `0.05` holo, `0` matte | Fine noise over the foil so it is not a clean mathematical gradient. |
+| `spin` | none | Path to a scrub sequence manifest. Used on low power devices instead of the shader. |
+
+`viewer.ts` takes two more options the component does not expose, both for the
+headless shot script: `interactive: false` (no listeners, no idle, no spring) and
+`pixelSize` (a fixed backing store instead of a measured one), plus `fit` to
+control how much of the frame the sticker fills.
 
 ## Switching holographic to matte
 
@@ -104,9 +110,57 @@ image, set `image` and leave `artwork` out.
 
 ## Fallbacks
 
-WebGL missing or the texture fails to load, in order:
+WebGL missing, the texture failing to load, or a device with 2 cores or less, in order:
 
-1. CSS 3D transform plus a layered gradient, driven by the same angle the shader uses.
-2. The static poster image.
+1. The pre rendered scrub sequence, if the product has one.
+2. CSS 3D transform plus a layered gradient, driven by the same angle the shader uses.
+3. The static poster image.
 
 Never a blank box, and never a drawn placeholder.
+
+## Product shots
+
+`scripts/sticker-shots/shoot.mjs` renders the shots by driving *this* renderer in a
+headless browser, so the shots and the live viewer cannot drift apart. There is no
+second implementation of the shader anywhere.
+
+```bash
+npm i -D playwright --no-save && npx playwright install chromium   # first run only
+node scripts/sticker-shots/shoot.mjs --spin
+```
+
+Playwright is deliberately not in `package.json`. It is only needed when the artwork
+changes, and adding it would pull ~130MB of Chromium into every Netlify build. The
+`--no-save` install leaves `package.json` untouched; re-run it after any `npm ci`.
+
+| Flag | Effect |
+|---|---|
+| *(none)* | The five angles, cached if nothing changed |
+| `--force` | Ignore the cache and redo everything |
+| `--slug <name>` | Just one product |
+| `--spin` | Also build the scrub sequence |
+| `--spin-range <deg>` | Half width of the scrub sweep. Default 60, matching the drag limit. Pass 180 for a literal 360 spin. |
+
+**Output** goes to `public/products/{slug}/` as `{slug}--{shot}@{width}.{ext}`.
+
+- Angles: `flat` 0°, `hero` 10°, `angle-l` −35°, `angle-r` 35°, `edge` 62°.
+- Each angle twice: transparent alpha, and `-dark` over the reference vignette.
+- Rendered at 2400², written at 1200 / 600 / 300, as PNG, WebP and AVIF.
+- A soft contact shadow at 110/255 opacity is built from the sticker's own alpha, so
+  it follows the silhouette at every angle. Its own layer, no mount or support in frame.
+- Re-runnable and idempotent: a fingerprint of the artwork plus every setting that
+  affects output is kept in `.astro/sticker-shots/`, outside `public/`.
+
+Products without an `artwork` field are skipped with a note rather than rendered from
+a mockup. If a file named in `artwork` is missing, the script stops for that product
+and says so; it never substitutes anything.
+
+### Scrub sequence
+
+`--spin` writes 36 frames as one 6×6 sprite sheet (`{slug}--spin-sheet.webp`, ~400KB)
+plus `{slug}--spin.json`. Point a product's `spin` field at the JSON.
+
+The frames sweep −60° to +60°, which is the viewer's own drag range, so scrubbing feels
+like the live thing. The brief said "36 frames at 10° steps", which is literally 360°,
+but the reference scrub rocks within the drag range and never shows the sticker's back.
+Pass `--spin-range 180` if you did want the full rotation.

@@ -34,6 +34,8 @@ const products = defineCollection({
     artwork: z.string().optional(),
     // Die cut shape applied by the renderer, not baked into the artwork.
     dieCut: z.enum(['circle', 'none']).default('none'),
+    // Pre rendered scrub sequence manifest, for low power devices.
+    spin: z.string().optional(),
     // Short sentence describing the sticker, used as the viewer's alt text.
     altText: z.string().optional(),
     description: z.string().optional(),

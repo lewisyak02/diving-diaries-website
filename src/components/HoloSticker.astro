@@ -16,6 +16,8 @@ interface Props {
   hueScale?: number;
   tileScale?: number;
   grain?: number;
+  /** Manifest for the pre rendered scrub sequence, used on low power devices. */
+  spin?: string;
   class?: string;
 }
 const {
@@ -28,6 +30,7 @@ const {
   hueScale = 1,
   tileScale = material === 'holo' ? 1.15 : 1,
   grain = material === 'holo' ? 0.05 : 0,
+  spin,
   class: klass = '',
 } = Astro.props;
 ---
@@ -42,6 +45,7 @@ const {
   data-hue-scale={String(hueScale)}
   data-tile-scale={String(tileScale)}
   data-grain={String(grain)}
+  data-spin={spin}
 >
   <img class="holo-stage__poster" src={poster ?? src} alt={alt} loading="lazy" decoding="async" />
   <canvas class="holo-stage__canvas" tabindex="0" role="img" aria-label={alt}></canvas>
@@ -81,6 +85,22 @@ const {
   }
   .holo-stage.is-live .holo-stage__canvas { opacity: 1; }
   .holo-stage.is-live .holo-stage__poster { opacity: 0; }
+
+  /* Pre rendered scrub sequence: a sprite sheet stepped by the pointer. */
+  .holo-stage__scrub {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    touch-action: pan-y;
+    cursor: grab;
+    outline: none;
+  }
+  .holo-stage__scrub:active { cursor: grabbing; }
+  .holo-stage__scrub:focus-visible {
+    outline: 3px solid var(--color-purple-400, #8f88e8);
+    outline-offset: -3px;
+  }
+  .holo-stage.is-scrub .holo-stage__poster { opacity: 0; }
 
   /* No WebGL: CSS 3D transform plus a layered gradient, driven by the same
      angle the shader would have used. Falls back to the poster on its own if
@@ -137,6 +157,66 @@ const {
     if (reduced) stage.style.setProperty('--theta', '0deg');
   }
 
+  // Devices that should not be asked to run a fragment shader per pixel.
+  function lowPower() {
+    const cores = navigator.hardwareConcurrency ?? 8;
+    const mem = (navigator as any).deviceMemory ?? 8;
+    return cores <= 2 || mem <= 2;
+  }
+
+  // Pre rendered scrub sequence. Same angles the shader would have drawn,
+  // stepped through a sprite sheet instead of rendered live.
+  async function scrubFallback(stage: HTMLElement, url: string) {
+    let m: any;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return false;
+      m = await res.json();
+    } catch {
+      return false;
+    }
+
+    const el = document.createElement('div');
+    el.className = 'holo-stage__scrub';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', stage.querySelector('img')?.alt ?? '');
+    el.style.backgroundImage = `url(${m.sheet})`;
+    el.style.backgroundSize = `${m.cols * 100}% ${m.rows * 100}%`;
+
+    const mid = Math.floor(m.frames / 2);
+    const show = (i: number) => {
+      const f = Math.max(0, Math.min(m.frames - 1, Math.round(i)));
+      const col = f % m.cols;
+      const row = Math.floor(f / m.cols);
+      el.style.backgroundPosition =
+        `${(col / (m.cols - 1)) * 100}% ${(row / (m.rows - 1)) * 100}%`;
+    };
+    show(mid);
+
+    const fromX = (clientX: number) => {
+      const r = el.getBoundingClientRect();
+      show(((clientX - r.left) / r.width) * (m.frames - 1));
+    };
+    el.addEventListener('pointerdown', (e) => {
+      el.setPointerCapture(e.pointerId);
+      fromX(e.clientX);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' || el.hasPointerCapture(e.pointerId)) fromX(e.clientX);
+    });
+    el.addEventListener('pointerleave', () => show(mid));
+    el.addEventListener('keydown', (e) => {
+      const cur = Number(el.dataset.frame ?? mid);
+      if (e.key === 'ArrowLeft') { e.preventDefault(); el.dataset.frame = String(cur - 1); show(cur - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); el.dataset.frame = String(cur + 1); show(cur + 1); }
+    });
+
+    stage.appendChild(el);
+    stage.classList.add('is-scrub');
+    return true;
+  }
+
   // Only build the GL context once the card is near the viewport.
   const io = new IntersectionObserver(
     (entries) => {
@@ -153,6 +233,12 @@ const {
   async function init(stage: HTMLElement) {
     const canvas = stage.querySelector<HTMLCanvasElement>('.holo-stage__canvas');
     if (!canvas) return;
+
+    // Low power devices get the pre rendered scrub rather than the shader.
+    if (stage.dataset.spin && lowPower()) {
+      if (await scrubFallback(stage, stage.dataset.spin)) return;
+    }
+
     try {
       const viewer = await createHoloViewer(canvas, {
         src: stage.dataset.src!,
@@ -163,11 +249,13 @@ const {
         tileScale: Number(stage.dataset.tileScale ?? 1),
         grain: Number(stage.dataset.grain ?? 0),
       });
-      if (viewer) stage.classList.add('is-live');
-      else cssFallback(stage);
+      if (viewer) { stage.classList.add('is-live'); return; }
     } catch {
-      cssFallback(stage);
+      /* fall through to the cheaper tiers */
     }
+    // No WebGL: the scrub sequence if there is one, otherwise CSS 3D.
+    if (stage.dataset.spin && (await scrubFallback(stage, stage.dataset.spin))) return;
+    cssFallback(stage);
   }
 
   stages.forEach((s) => io.observe(s));

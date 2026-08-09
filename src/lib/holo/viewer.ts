@@ -11,6 +11,13 @@ export interface HoloOptions {
   hueScale: number;
   tileScale: number;
   grain: number;
+  /** Off for headless product shots: no listeners, no idle, no spring. */
+  interactive?: boolean;
+  /** Force a fixed backing store instead of measuring the element. */
+  pixelSize?: number;
+  /** How much of the frame the sticker fills. Shots use less, to leave room
+   *  for the contact shadow. */
+  fit?: number;
 }
 
 const DEG = Math.PI / 180;
@@ -65,6 +72,8 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     antialias: true,
     premultipliedAlpha: false,
     depth: false,
+    // Headless shots read the buffer back with toDataURL, which needs it kept.
+    preserveDrawingBuffer: opts.interactive === false,
   }) || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
   if (!gl) return null;
 
@@ -139,10 +148,11 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
 
   // A die cut circle needs room around it for the rim and the tilt; a full
   // bleed rectangle should sit as close to the frame as rotation allows.
-  const fit = opts.dieCut === 'circle' ? 0.88 : 0.98;
+  const fit = opts.fit ?? (opts.dieCut === 'circle' ? 0.88 : 0.98);
 
   // --- state -------------------------------------------------------------
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const interactive = opts.interactive !== false;
+  const reduced = !interactive || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let yaw = 0;
   let tilt = 0;
   let dragging = false;
@@ -157,10 +167,19 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   const t0 = performance.now();
 
   function resize() {
-    const rect = canvas.getBoundingClientRect();
-    const side = Math.max(1, Math.min(rect.width, rect.height));
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const px = Math.round(side * dpr);
+    let px: number;
+    let side: number;
+    if (opts.pixelSize) {
+      // Headless product shots render at a fixed size, not a measured one.
+      dpr = 1;
+      px = opts.pixelSize;
+      side = px;
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      side = Math.max(1, Math.min(rect.width, rect.height));
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      px = Math.round(side * dpr);
+    }
     if (px === canvas.width && side === cssSize) return;
     cssSize = side;
     canvas.width = px;
@@ -287,13 +306,15 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     schedule();
   };
 
-  canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointermove', onMove);
-  canvas.addEventListener('pointerup', onUp);
-  canvas.addEventListener('pointercancel', onUp);
-  canvas.addEventListener('pointerleave', onLeave);
-  canvas.addEventListener('keydown', onKey);
-  canvas.addEventListener('blur', onLeave);
+  if (interactive) {
+    canvas.addEventListener('pointerdown', onDown);
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointercancel', onUp);
+    canvas.addEventListener('pointerleave', onLeave);
+    canvas.addEventListener('keydown', onKey);
+    canvas.addEventListener('blur', onLeave);
+  }
 
   // Pause off screen and on a hidden tab.
   const io = new IntersectionObserver((entries) => {
@@ -322,6 +343,20 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   schedule();
 
   return {
+    /**
+     * Drive the angle directly, in degrees. Used by the product shot script,
+     * which needs angles the drag deliberately clamps out (the 62 degree edge
+     * shot sits past the interactive limit).
+     */
+    setAngle(yawDeg: number, tiltDeg = 0) {
+      touched = true;
+      springing = false;
+      yaw = yawDeg * DEG;
+      tilt = tiltDeg * DEG;
+      resize();
+      draw();
+      gl.finish();
+    },
     destroy() {
       io.disconnect();
       ro.disconnect();
