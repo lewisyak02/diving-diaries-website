@@ -226,8 +226,9 @@ async function main() {
     const stamp = createHash('sha256')
       .update(art)
       .update(JSON.stringify({
-        v: 2, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
+        v: 3, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
         holographic: !!p.holographic, dieCut: p.dieCut ?? 'none',
+        material: p.material ?? null, dropShadow: !!p.dropShadow,
         VIGNETTE_CENTRE, VIGNETTE_EDGE, SHADOW_ALPHA,
         doSpin, spinRange, SPIN_FRAMES, SPIN_COLS, SPIN_FRAME_PX,
       }))
@@ -255,8 +256,9 @@ async function main() {
       (o) => window.setupSticker(o),
       {
         src: dataUrl,
-        material: p.holographic ? 'holo' : 'matte',
+        material: p.material ?? (p.holographic ? 'holo' : 'matte'),
         dieCut: p.dieCut ?? 'none',
+        dropShadow: !!p.dropShadow,
         intensity: 0.9,
         hueScale: 1,
         tileScale: p.holographic ? 1.15 : 1,
@@ -298,6 +300,22 @@ async function main() {
       rendered++;
     }
 
+    // Poster: the still the card shows until the canvas is live. Rendered at
+    // the live fit so nothing jumps when the swap happens.
+    {
+      const png = Buffer.from(
+        (await page.evaluate(() => window.shootPoster(10))).split(',')[1],
+        'base64'
+      );
+      const info = await sharp(png).resize(800, 800)
+        .webp({ quality: 88, alphaQuality: 92 })
+        .toFile(path.join(dir, `${p.slug}--poster.webp`));
+      log(`  poster    10deg at the live fit`);
+      summary.push({ file: `${p.slug}--poster.webp`, width: 800, kb: Math.round(info.size / 1024) });
+    }
+
+    // The poster switched the renderer to the live fit, which is what the
+    // scrub wants too: it stands in for the live viewer, not for a shot.
     if (doSpin) {
       const rows = Math.ceil(SPIN_FRAMES / SPIN_COLS);
       const tiles = [];

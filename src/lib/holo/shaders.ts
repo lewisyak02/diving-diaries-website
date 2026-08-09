@@ -11,11 +11,12 @@ uniform float uBow;     // shallow bow across the plane, vinyl is never flat
 uniform float uDist;    // camera distance, in radii
 uniform float uScale;   // fit inside the canvas
 uniform vec2  uAspect;  // canvas aspect correction
+uniform vec2  uPlane;   // plane proportions: (1, 1) square, (1, 1/AR) for a decal
 
 varying vec2 vNxy;
 
 void main() {
-  vec2 p = aPos;
+  vec2 p = aPos * uPlane;
 
   // Vinyl never sits perfectly flat. A gentle cylindrical bow, strongest at
   // the centre line and easing out towards the edges.
@@ -35,7 +36,8 @@ void main() {
   float persp = uDist / (uDist + r.z);
 
   gl_Position = vec4(r.xy * persp * uScale * uAspect, 0.0, 1.0);
-  vNxy = p;
+  // Normalised across the sticker's own extent, whatever its proportions.
+  vNxy = aPos;
 }
 `;
 
@@ -48,7 +50,13 @@ uniform sampler2D uTex;
 uniform float uTheta;
 uniform float uIntensity;   // foil strength, default 0.9
 uniform float uHueScale;    // per product hue tuning
-uniform float uMaterial;    // 0 = holographic, 1 = matte vinyl
+uniform float uMaterial;    // 0 = holographic, 1 = matte vinyl, 2 = transfer decal
+uniform float uDecalAR;     // decal frame width / height
+uniform float uRadius;      // die cut corner radius, in plane units
+uniform vec2  uInset;       // frame size / logo size, i.e. the print margin
+uniform float uDropShadow;  // the drop shadow finish
+uniform vec2  uShadowOff;   // its offset, in uv
+uniform float uRimW;        // width of the cut edge highlight
 uniform float uDieCut;      // 0 = circle, 1 = none
 uniform float uTileScale;   // tile drawn at this multiple of the die diameter
 uniform float uBlur;        // 0.8px gaussian, expressed in uv
@@ -99,7 +107,68 @@ float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7)) + uSeed) * 43758.5453);
 }
 
+// For a transfer decal the alpha channel of the artwork IS the printed white
+// ink. Outside the artwork there is no ink, only clear film.
+float inkAt(vec2 uv) {
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
+  return texture2D(uTex, uv).a;
+}
+
+/**
+ * Clear matte transfer vinyl: white ink on a clear carrier film, cut as a
+ * rounded rectangle around the logo with a print margin. No foil, no rainbow.
+ */
+vec4 decal() {
+  vec2 uvd = vNxy * uInset * 0.5 + 0.5;
+  float ink = inkAt(uvd);
+
+  // Die cut, derived from the logo rather than authored per product.
+  vec2 p = vec2(vNxy.x, vNxy.y / uDecalAR);
+  vec2 h = vec2(1.0, 1.0 / uDecalAR);
+  vec2 q = abs(p) - (h - uRadius);
+  float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uRadius;
+  float film = 1.0 - smoothstep(-uAA, uAA, d);
+
+  vec3 rgb = vec3(0.0);
+  float a = 0.0;
+
+  // The film itself is barely there: you read it by its edge and its sheen.
+  float filmA = film * 0.20;
+  rgb += vec3(0.86) * filmA;
+  a = filmA;
+
+  // Light catching the cut edge.
+  float rim = clamp(1.0 + d / uRimW, 0.0, 1.0) * film;
+  rgb += vec3(rim * 0.75);
+  a = clamp(a + rim * 0.75, 0.0, 1.0);
+
+  // Broad soft specular sweep across the film, tied to viewing angle.
+  float band = exp(-sq((vNxy.x * 0.92 + vNxy.y * 0.39) - sin(uTheta * 1.5) * 0.75) / 0.18);
+  float sheen = band * film * 0.20;
+  rgb += vec3(sheen);
+  a = clamp(a + sheen * 0.7, 0.0, 1.0);
+
+  // Drop shadow finish: an offset dark plate behind the white.
+  if (uDropShadow > 0.5) {
+    float sh = inkAt(uvd + uShadowOff) * 0.92;
+    rgb = rgb * (1.0 - sh) + 0.06 * sh;
+    a = clamp(a + sh, 0.0, 1.0);
+  }
+
+  // White ink: opaque, matte, gentle diffuse falloff and nothing else.
+  float diff = clamp(0.90 + 0.10 * cos(uTheta) * (1.0 - 0.25 * abs(vNxy.x)), 0.0, 1.0);
+  rgb = rgb * (1.0 - ink) + diff * ink;
+  a = clamp(a + ink, 0.0, 1.0);
+
+  return vec4(rgb, a * clamp(film * 3.0, 0.0, 1.0));
+}
+
 void main() {
+  if (uMaterial > 1.5) {
+    gl_FragColor = decal();
+    return;
+  }
+
   vec2 uv = vNxy * (0.5 / uTileScale) + 0.5;
   vec3 base = texture2D(uTex, uv).rgb;
   vec3 col;

@@ -1,6 +1,6 @@
 import { VERT, FRAG } from './shaders';
 
-export type Material = 'holo' | 'matte';
+export type Material = 'holo' | 'matte' | 'decal';
 export type DieCut = 'circle' | 'none';
 
 export interface HoloOptions {
@@ -18,6 +18,53 @@ export interface HoloOptions {
   /** How much of the frame the sticker fills. Shots use less, to leave room
    *  for the contact shadow. */
   fit?: number;
+  /** Decal only: the drop shadow finish. */
+  dropShadow?: boolean;
+}
+
+// Decal geometry, matching the print setup in render_decal.py. Everything is
+// derived from the logo, so a new decal needs no per product numbers.
+const MARGIN_RATIO = 0.17;  // print margin, as a fraction of logo height
+const RADIUS_RATIO = 0.34;  // corner radius, as a fraction of frame height
+const SHADOW_RATIO = 0.055; // drop shadow offset, as a fraction of logo height
+
+/**
+ * Crop an image to the bounds of its own ink, so the print margin is measured
+ * from the artwork rather than from whatever padding the file happens to have.
+ */
+function cropToInk(img: HTMLImageElement): HTMLCanvasElement | null {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0);
+
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, c.width, c.height).data;
+  } catch {
+    return null; // tainted canvas, fall back to the uncropped image
+  }
+
+  let minX = c.width, minY = c.height, maxX = -1, maxY = -1;
+  for (let y = 0; y < c.height; y++) {
+    for (let x = 0; x < c.width; x++) {
+      if (data[(y * c.width + x) * 4 + 3] > 10) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null;
+
+  const out = document.createElement('canvas');
+  out.width = maxX - minX + 1;
+  out.height = maxY - minY + 1;
+  out.getContext('2d')!.drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+  return out;
 }
 
 const DEG = Math.PI / 180;
@@ -105,16 +152,23 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
 
+  // A decal's print margin is measured from the logo's own ink, so crop the
+  // artwork to its alpha bounds first.
+  const cropped = opts.material === 'decal' ? cropToInk(image) : null;
+  const source: TexImageSource = cropped ?? image;
+  const srcW = cropped ? cropped.width : image.naturalWidth;
+  const srcH = cropped ? cropped.height : image.naturalHeight;
+
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   const pot = (n: number) => (n & (n - 1)) === 0;
-  if (pot(image.naturalWidth) && pot(image.naturalHeight)) {
+  if (pot(srcW) && pot(srcH)) {
     gl.generateMipmap(gl.TEXTURE_2D);
   } else {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -130,13 +184,17 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     scale: U('uScale'), aspect: U('uAspect'), tex: U('uTex'),
     intensity: U('uIntensity'), hueScale: U('uHueScale'), material: U('uMaterial'),
     dieCut: U('uDieCut'), tileScale: U('uTileScale'), blur: U('uBlur'),
-    aa: U('uAA'), grain: U('uGrain'), seed: U('uSeed'),
+    aa: U('uAA'), grain: U('uGrain'), seed: U('uSeed'), plane: U('uPlane'),
+    decalAR: U('uDecalAR'), radius: U('uRadius'), inset: U('uInset'),
+    dropShadow: U('uDropShadow'), shadowOff: U('uShadowOff'), rimW: U('uRimW'),
   };
+
+  const isDecal = opts.material === 'decal';
 
   gl.uniform1i(u.tex, 0);
   gl.uniform1f(u.intensity, opts.intensity);
   gl.uniform1f(u.hueScale, opts.hueScale);
-  gl.uniform1f(u.material, opts.material === 'holo' ? 0 : 1);
+  gl.uniform1f(u.material, isDecal ? 2 : opts.material === 'holo' ? 0 : 1);
   gl.uniform1f(u.dieCut, opts.dieCut === 'circle' ? 0 : 1);
   gl.uniform1f(u.tileScale, opts.tileScale);
   gl.uniform1f(u.grain, opts.grain);
@@ -146,9 +204,25 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.uniform1f(u.dist, 2.6 * 2);
   gl.uniform1f(u.bow, 0.055);
 
+  // Decal geometry, all of it derived from the logo's own proportions.
+  // Working in units where the logo is 1 high.
+  const logoAR = srcW / srcH;
+  const frameW = logoAR + MARGIN_RATIO * 2;
+  const frameH = 1 + MARGIN_RATIO * 2;
+  const decalAR = frameW / frameH;
+  gl.uniform1f(u.decalAR, decalAR);
+  gl.uniform2f(u.inset, frameW / logoAR, frameH);
+  gl.uniform1f(u.radius, (RADIUS_RATIO * 2) / decalAR);
+  gl.uniform1f(u.dropShadow, opts.dropShadow ? 1 : 0);
+  gl.uniform2f(u.shadowOff, -SHADOW_RATIO / logoAR, SHADOW_RATIO);
+  gl.uniform1f(u.rimW, 0.012);
+  // A wide decal is a short plane; everything else is square.
+  gl.uniform2f(u.plane, 1, isDecal ? 1 / decalAR : 1);
+
   // A die cut circle needs room around it for the rim and the tilt; a full
   // bleed rectangle should sit as close to the frame as rotation allows.
-  const fit = opts.fit ?? (opts.dieCut === 'circle' ? 0.88 : 0.98);
+  const liveFit = isDecal ? 0.94 : opts.dieCut === 'circle' ? 0.88 : 0.98;
+  let fit = opts.fit ?? liveFit;
 
   // --- state -------------------------------------------------------------
   const interactive = opts.interactive !== false;
@@ -348,6 +422,12 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
      * which needs angles the drag deliberately clamps out (the 62 degree edge
      * shot sits past the interactive limit).
      */
+    /** The fit the live shop viewer uses, so a poster can match it exactly. */
+    liveFit,
+    /** Shots override the fit to leave room for the contact shadow. */
+    setFit(v: number) {
+      fit = v;
+    },
     setAngle(yawDeg: number, tiltDeg = 0) {
       touched = true;
       springing = false;

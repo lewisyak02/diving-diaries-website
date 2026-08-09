@@ -80,12 +80,15 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 ## Open items / TODO
 
 - **Shop / Stripe:** 4 sticker products exist (Circle Holographic + Front Adhesive Small/Medium/
-  Large) with ghost-style mockups but **blank prices and no buy links** (show "Coming soon").
-  Lewis sets up **Stripe Payment Links** per product and pastes them into each product's `buyUrl`
-  (finish options via a Stripe custom dropdown). He is also importing the **real printed sticker
-  artwork** to swap into the mockups (place his flat art onto the vinyl/holo bases; do not alter
-  the designs). Product mockups: AI garbles logo text, so generate a BLANK base (Higgsfield MCP)
-  and composite the real logo/art with sharp.
+  Large) with **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe
+  Payment Links** per product and pastes them into each product's `buyUrl` (finish options via
+  a Stripe custom dropdown).
+- **Sticker artwork:** 3 of 4 products now render from the **real artwork** through the live
+  WebGL viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`;
+  Small + Medium = decal material from `dd-wordmark-white.png`. **Front Adhesive Large is the
+  only one still on an AI mockup** — its "Black background" design was never supplied. If that
+  is just the same wordmark on a black plate, it is a config change, not new artwork.
+  No more AI mockups: the renderer draws his files directly.
 - **Activate the CMS** (GitHub App + env vars) when Lewis wants browser editing.
 - **Point the domain** `divingdiaries.au` at Netlify.
 - **Instagram/TikTok live stats:** not feasible without their official APIs; maintained by hand in

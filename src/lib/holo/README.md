@@ -47,7 +47,8 @@ All on `<HoloSticker />`.
 | `src` | required | Texture the renderer draws. For the holo circle this is the seamless tile. |
 | `alt` | required | Describes the sticker. Becomes the canvas `aria-label`. Not "3D viewer". |
 | `poster` | `src` | Static image shown until the canvas is live, and the last resort fallback. |
-| `material` | `'matte'` | `'holo'` for the foil shader, `'matte'` for flat diffuse vinyl. |
+| `material` | `'matte'` | `'holo'` foil shader, `'decal'` clear transfer vinyl, `'matte'` plain flat shading. |
+| `dropShadow` | `false` | Decal only. Shows the drop shadow finish instead of plain white. |
 | `dieCut` | `'none'` | `'circle'` cuts a disc with a thin unprinted rim. `'none'` is full bleed. |
 | `intensity` | `0.9` | Foil strength. |
 | `hueScale` | `1` | Per product hue tuning. Higher packs more colour bands across the sticker. |
@@ -60,13 +61,31 @@ headless shot script: `interactive: false` (no listeners, no idle, no spring) an
 `pixelSize` (a fixed backing store instead of a measured one), plus `fit` to
 control how much of the frame the sticker fills.
 
-## Switching holographic to matte
+## Switching between materials
 
-One prop: `material="matte"`. It is a config change, not a fork. The matte path skips the
-foil entirely and uses flat diffuse shading with a soft specular roll off, which is what
-transfer decals actually look like. Running the holo shader on a matte decal looks wrong.
+One prop: `material`. It is a config change, not a fork.
 
-In the CMS, `holographic: true` on a product sets `material="holo"`.
+- **`holo`** the full spectral foil path, for holographic vinyl.
+- **`decal`** clear transfer vinyl: white ink on a clear carrier film, cut as a rounded
+  rectangle around the logo. No foil, no rainbow. Running the holo shader here looks wrong.
+- **`matte`** plain flat diffuse with a soft specular roll off. The fallback for artwork
+  that is already a finished image rather than printable art.
+
+A product's `material` field wins; with it unset, `holographic: true` means `holo` and
+anything else means `matte`.
+
+### How the decal path works
+
+The artwork is the **white wordmark with alpha**, and its alpha channel is the printed ink,
+exactly as in your `render_decal.py`. Everything else is derived, so a new decal needs no
+per product numbers:
+
+- the logo is cropped to its own ink bounds, so file padding cannot shift anything
+- the print margin is 17% of the logo height
+- the die cut is a rounded rectangle with a corner radius of 34% of the frame height
+- the drop shadow finish offsets a dark plate by 5.5% of the logo height
+
+Those four ratios live at the top of `viewer.ts`. Change them there and every decal follows.
 
 ## Adding a new sticker
 

@@ -34,6 +34,10 @@ const products = defineCollection({
     artwork: z.string().optional(),
     // Die cut shape applied by the renderer, not baked into the artwork.
     dieCut: z.enum(['circle', 'none']).default('none'),
+    // How the surface is rendered. Falls back to `holographic` when unset.
+    material: z.enum(['holo', 'matte', 'decal']).optional(),
+    // Decal only: preview the drop shadow finish instead of plain white.
+    dropShadow: z.boolean().default(false),
     // Pre rendered scrub sequence manifest, for low power devices.
     spin: z.string().optional(),
     // Short sentence describing the sticker, used as the viewer's alt text.

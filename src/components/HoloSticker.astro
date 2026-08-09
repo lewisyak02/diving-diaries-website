@@ -10,8 +10,10 @@ interface Props {
   src: string;              // texture: the artwork the renderer draws
   alt: string;
   poster?: string;          // static image shown until the canvas is live
-  material?: 'holo' | 'matte';
+  material?: 'holo' | 'matte' | 'decal';
   dieCut?: 'circle' | 'none';
+  /** Decal only: the drop shadow finish. */
+  dropShadow?: boolean;
   intensity?: number;
   hueScale?: number;
   tileScale?: number;
@@ -26,6 +28,7 @@ const {
   poster,
   material = 'matte',
   dieCut = 'none',
+  dropShadow = false,
   intensity = 0.9,
   hueScale = 1,
   tileScale = material === 'holo' ? 1.15 : 1,
@@ -46,6 +49,7 @@ const {
   data-tile-scale={String(tileScale)}
   data-grain={String(grain)}
   data-spin={spin}
+  data-drop-shadow={dropShadow ? '1' : undefined}
 >
   <img class="holo-stage__poster" src={poster ?? src} alt={alt} loading="lazy" decoding="async" />
   <canvas class="holo-stage__canvas" tabindex="0" role="img" aria-label={alt}></canvas>
@@ -242,8 +246,9 @@ const {
     try {
       const viewer = await createHoloViewer(canvas, {
         src: stage.dataset.src!,
-        material: stage.dataset.material === 'holo' ? 'holo' : 'matte',
+        material: stage.dataset.material as 'holo' | 'matte' | 'decal',
         dieCut: stage.dataset.dieCut === 'circle' ? 'circle' : 'none',
+        dropShadow: stage.dataset.dropShadow === '1',
         intensity: Number(stage.dataset.intensity ?? 0.9),
         hueScale: Number(stage.dataset.hueScale ?? 1),
         tileScale: Number(stage.dataset.tileScale ?? 1),
