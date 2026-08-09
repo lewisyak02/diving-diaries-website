@@ -1,6 +1,6 @@
 ---
 import Wordmark from './Wordmark.astro';
-import { NAV } from '../lib/nav';
+import { NAV, TAB_NAV } from '../lib/nav';
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? path === '/' : path.startsWith(href);
@@ -13,10 +13,10 @@ const isActive = (href: string) =>
   >
     <Wordmark type="long" variant="light" size="sm" href="/" class="logo-anim" />
 
-    <!-- Desktop nav -->
+    <!-- Tabs: the few most used destinations -->
     <ul class="hidden items-center gap-1 md:flex">
       {
-        NAV.filter((n) => n.href !== '/').map((n) => (
+        TAB_NAV.map((n) => (
           <li>
             <a
               href={n.href}
@@ -34,9 +34,12 @@ const isActive = (href: string) =>
       }
     </ul>
 
-    <!-- Mobile nav -->
-    <details class="relative md:hidden">
-      <summary class="flex cursor-pointer list-none items-center rounded-full p-2 text-white">
+    <!-- Full menu, at every screen size -->
+    <details id="nav-menu" class="relative ml-1">
+      <summary
+        class="flex cursor-pointer list-none items-center rounded-full p-2 text-white transition-colors hover:bg-white/10"
+        aria-label="Open menu"
+      >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
         </svg>
@@ -72,4 +75,18 @@ const isActive = (href: string) =>
   };
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // The menu is on desktop now, so it needs to close the way a menu should.
+  const menu = document.getElementById('nav-menu') as HTMLDetailsElement | null;
+  if (menu) {
+    document.addEventListener('click', (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.open) {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      }
+    });
+  }
 </script>

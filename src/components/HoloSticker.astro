@@ -53,6 +53,14 @@ const {
 >
   <img class="holo-stage__poster" src={poster ?? src} alt={alt} loading="lazy" decoding="async" />
   <canvas class="holo-stage__canvas" tabindex="0" role="img" aria-label={alt}></canvas>
+  <!-- Touch has no hover, so the interaction needs saying out loud. The alt
+       text already carries it for screen readers. -->
+  <div class="holo-stage__hint" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 7 4 12l4 5M16 7l4 5-4 5" />
+    </svg>
+    Drag to move
+  </div>
 </div>
 
 <style>
@@ -105,6 +113,55 @@ const {
     outline-offset: -3px;
   }
   .holo-stage.is-scrub .holo-stage__poster { opacity: 0; }
+
+  /* Drag hint */
+  .holo-stage__hint {
+    position: absolute;
+    left: 50%;
+    bottom: 0.85rem;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(4, 12, 36, 0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+  .holo-stage__hint svg {
+    animation: holo-hint-nudge 1.9s ease-in-out infinite;
+  }
+  @keyframes holo-hint-nudge {
+    0%, 100% { transform: translateX(-2.5px); }
+    50% { transform: translateX(2.5px); }
+  }
+  /* Only where there is no hover to discover it with, and only once the
+     sticker is genuinely draggable. */
+  @media (hover: none) and (pointer: coarse) {
+    .holo-stage.is-live .holo-stage__hint,
+    .holo-stage.is-scrub .holo-stage__hint {
+      display: flex;
+    }
+    /* :not() rather than a later override, so showing and hiding cannot end up
+       fighting over source order. Base opacity is 0, so it fades both ways. */
+    .holo-stage.is-live:not(.has-touched) .holo-stage__hint,
+    .holo-stage.is-scrub:not(.has-touched) .holo-stage__hint {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .holo-stage__hint svg { animation: none; }
+  }
 
   /* No WebGL: CSS 3D transform plus a layered gradient, driven by the same
      angle the shader would have used. Falls back to the poster on its own if
@@ -264,4 +321,27 @@ const {
   }
 
   stages.forEach((s) => io.observe(s));
+
+  // Once someone has dragged one sticker they know the rest move too, so the
+  // hint retires for the whole visit rather than nagging on every card.
+  const HINT_KEY = 'dd-sticker-dragged';
+  const retireHints = () => stages.forEach((s) => s.classList.add('has-touched'));
+  try {
+    if (sessionStorage.getItem(HINT_KEY)) retireHints();
+  } catch {
+    /* private mode, the hint just shows again next visit */
+  }
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (!(e.target as HTMLElement).closest?.('[data-holo]')) return;
+      retireHints();
+      try {
+        sessionStorage.setItem(HINT_KEY, '1');
+      } catch {
+        /* nothing to remember it with, no harm done */
+      }
+    },
+    { passive: true }
+  );
 </script>

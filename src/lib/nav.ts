@@ -1,4 +1,4 @@
-// Primary navigation and the five content pillars.
+// Every destination. The full list lives in the dropdown menu.
 export const NAV = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
@@ -8,6 +8,12 @@ export const NAV = [
   { label: 'Shop', href: '/shop' },
   { label: 'Contact', href: '/contact' },
 ] as const;
+
+// The few shown as tabs in the bar itself. Everything else stays one tap away
+// in the menu, so the bar does not get crowded.
+export const TAB_NAV = NAV.filter((n) =>
+  ['/about', '/watch', '/shop', '/contact'].includes(n.href)
+);
 
 export type PillarSlug =
   | 'diary-entries'
