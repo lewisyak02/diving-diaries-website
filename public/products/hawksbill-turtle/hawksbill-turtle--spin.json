@@ -1,0 +1,9 @@
+{
+  "frames": 36,
+  "cols": 6,
+  "rows": 6,
+  "framePx": 300,
+  "yawFrom": -60,
+  "yawTo": 60,
+  "sheet": "/products/hawksbill-turtle/hawksbill-turtle--spin-sheet.webp"
+}

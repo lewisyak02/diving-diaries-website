@@ -83,15 +83,24 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 
 ## Open items / TODO
 
-- **Shop / Stripe:** 3 sticker products (Circle Holographic + Front Adhesive Small/Medium) with
+- **Shop / Stripe:** 8 sticker products: Circle Holographic, Front Adhesive Small/Medium, the
+  Marine Life Sticker Pack, and 4 individual marine life stickers (fiddler ray, starfish
+  cuddles, grey nurse shark, hawksbill turtle). The 5 newest have **no size set** because the
+  physical dimensions were never supplied. All 8 have
   **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe Payment Links**
   per product and pastes them into each product's `buyUrl` (finish options via a Stripe custom
   dropdown). The on-card finish buttons are a **preview only** and carry nothing to checkout.
 - **Sticker artwork:** every product renders from the **real artwork** through the live WebGL
   viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`; Small +
-  Medium = decal material from `dd-wordmark-white.png`, switchable White / Drop shadow.
+  Medium = decal material from `dd-wordmark-white.png`, switchable White / Drop shadow; marine
+  life = `matte` material on finished die cut art that carries its own cut line in its alpha.
+  The pack sheet is built by `scripts/sticker-shots/build-pack.mjs`, which arranges his files
+  and draws nothing.
   No AI mockups anywhere: the renderer draws his files directly. Front Adhesive Large was
   removed (Aug 2026) because he did not like it.
+- **Product shots** skip PNG above 600px wide (`PNG_MAX_WIDTH` in `shoot.mjs`). At 1200 the
+  PNGs alone were 52MB of the deployed site for no gain over WebP. Raise it only if a printer
+  asks for PNG.
 - **Card backdrop** is a deliberate mid tone (`.sticker-backdrop`): white ink vanishes on a
   light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
   `bg-ocean-900`.

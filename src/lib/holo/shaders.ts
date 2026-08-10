@@ -198,6 +198,10 @@ void main() {
   float r = length(vNxy);
   float alpha = uDieCut < 0.5 ? 1.0 - smoothstep(1.0 - uAA, 1.0, r) : 1.0;
 
+  // Artwork that carries its own cut line, as a finished design with a
+  // transparent surround, keeps that shape.
+  if (uMaterial > 0.5) alpha *= texture2D(uTex, uv).a;
+
   // Thin unprinted rim just inside the cut line, and it clips the sheen with it.
   if (uDieCut < 0.5) {
     col = mix(col, vec3(0.95, 0.95, 0.96), smoothstep(0.958, 0.974, r));

@@ -152,9 +152,12 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
 
-  // A decal's print margin is measured from the logo's own ink, so crop the
-  // artwork to its alpha bounds first.
-  const cropped = opts.material === 'decal' ? cropToInk(image) : null;
+  // Crop to the artwork's own ink. A decal measures its print margin from
+  // this, and a finished die cut design fills its card instead of floating in
+  // whatever transparent padding the file happened to carry. On artwork with
+  // no transparency this is a no op.
+  const cropped =
+    opts.material !== 'holo' ? cropToInk(image) : null;
   const source: TexImageSource = cropped ?? image;
   const srcW = cropped ? cropped.width : image.naturalWidth;
   const srcH = cropped ? cropped.height : image.naturalHeight;
@@ -216,12 +219,22 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.uniform1f(u.dropShadow, opts.dropShadow ? 1 : 0);
   gl.uniform2f(u.shadowOff, -SHADOW_RATIO / logoAR, SHADOW_RATIO);
   gl.uniform1f(u.rimW, 0.012);
-  // A wide decal is a short plane; everything else is square.
-  gl.uniform2f(u.plane, 1, isDecal ? 1 / decalAR : 1);
+
+  // The plane takes the artwork's proportions, so a wide sticker is a wide
+  // plane rather than a square one with the art squashed into it. A holo tile
+  // is seamless and gets centre cropped instead, so it stays square.
+  const texAR = srcW / srcH;
+  if (isDecal) {
+    gl.uniform2f(u.plane, 1, 1 / decalAR);
+  } else if (opts.material === 'matte') {
+    gl.uniform2f(u.plane, texAR >= 1 ? 1 : texAR, texAR >= 1 ? 1 / texAR : 1);
+  } else {
+    gl.uniform2f(u.plane, 1, 1);
+  }
 
   // A die cut circle needs room around it for the rim and the tilt; a full
   // bleed rectangle should sit as close to the frame as rotation allows.
-  const liveFit = isDecal ? 0.94 : opts.dieCut === 'circle' ? 0.88 : 0.98;
+  const liveFit = isDecal ? 0.94 : opts.dieCut === 'circle' ? 0.88 : 0.92;
   let fit = opts.fit ?? liveFit;
 
   // --- state -------------------------------------------------------------

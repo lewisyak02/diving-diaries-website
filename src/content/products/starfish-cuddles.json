@@ -1,0 +1,15 @@
+{
+  "name": "Starfish Cuddles",
+  "price": "",
+  "image": "/products/starfish-cuddles/starfish-cuddles--poster.webp",
+  "artwork": "/stickers/marine-life/starfish-cuddles.webp",
+  "dieCut": "none",
+  "material": "matte",
+  "altText": "A die cut sticker of two sea stars stacked on top of one another, one gold and one deep blue. Drag it to tilt it.",
+  "description": "Two sea stars piled on top of each other on the reef. The kind of small moment that is easy to swim straight past.",
+  "holographic": false,
+  "buyUrl": "",
+  "soldOut": false,
+  "order": 6,
+  "spin": "/products/starfish-cuddles/starfish-cuddles--spin.json"
+}

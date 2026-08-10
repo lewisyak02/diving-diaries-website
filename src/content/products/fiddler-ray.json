@@ -1,0 +1,15 @@
+{
+  "name": "Fiddler Ray",
+  "price": "",
+  "image": "/products/fiddler-ray/fiddler-ray--poster.webp",
+  "artwork": "/stickers/marine-life/fiddler-ray.webp",
+  "dieCut": "none",
+  "material": "matte",
+  "altText": "A die cut sticker of a fiddler ray, blue banded and half buried in sand. Drag it to tilt it.",
+  "description": "Also called a banjo shark, though it is neither. Harmless, spends its days half buried on the sand, and one of the most reliable finds on a Gold Coast shore dive.",
+  "holographic": false,
+  "buyUrl": "",
+  "soldOut": false,
+  "order": 5,
+  "spin": "/products/fiddler-ray/fiddler-ray--spin.json"
+}

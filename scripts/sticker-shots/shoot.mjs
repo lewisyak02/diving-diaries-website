@@ -33,6 +33,10 @@ const SOURCE_PX = 2400;
 const SHOT_FIT = 0.8;
 const WIDTHS = [1200, 600, 300];
 const FORMATS = ['png', 'webp', 'avif'];
+// PNG above this width is skipped. At 1200 the PNGs were 52MB across the shop
+// for images WebP renders identically at a tenth the size, and every one of
+// them was being deployed. Raise to 1200 if a printer ever demands PNG.
+const PNG_MAX_WIDTH = 600;
 
 // Angles from the brief.
 const SHOTS = [
@@ -168,6 +172,7 @@ async function writeVariants(buf, dir, slug, shot, summary) {
   for (const width of WIDTHS) {
     const resized = sharp(buf).resize(width, width, { fit: 'inside' });
     for (const fmt of FORMATS) {
+      if (fmt === 'png' && width > PNG_MAX_WIDTH) continue;
       const file = path.join(dir, `${slug}--${shot}@${width}.${fmt}`);
       let pipe = resized.clone();
       if (fmt === 'png') pipe = pipe.png({ compressionLevel: 9 });
@@ -226,7 +231,7 @@ async function main() {
     const stamp = createHash('sha256')
       .update(art)
       .update(JSON.stringify({
-        v: 3, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
+        v: 4, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
         holographic: !!p.holographic, dieCut: p.dieCut ?? 'none',
         material: p.material ?? null, dropShadow: !!p.dropShadow,
         VIGNETTE_CENTRE, VIGNETTE_EDGE, SHADOW_ALPHA,
@@ -250,7 +255,8 @@ async function main() {
     log(`\n${p.slug}`);
     // Inline the artwork so the canvas is never tainted and toDataURL can read
     // real pixels back out.
-    const mime = artworkPath.endsWith('.jpg') || artworkPath.endsWith('.jpeg') ? 'jpeg' : 'png';
+    const ext = path.extname(artworkPath).toLowerCase();
+    const mime = ext === '.jpg' || ext === '.jpeg' ? 'jpeg' : ext === '.webp' ? 'webp' : 'png';
     const dataUrl = `data:image/${mime};base64,${art.toString('base64')}`;
     const ok = await page.evaluate(
       (o) => window.setupSticker(o),
