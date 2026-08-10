@@ -6,23 +6,14 @@
   "material": "decal",
   "dieCut": "none",
   "altText": "A 30mm front adhesive DDIARIES decal, the wordmark in white ink on clear film. Drag it to tilt it in the light.",
-  "description": "A tiny front adhesive logo, perfect for the inside of your mask or on a phone case so it faces the world through the glass. Choose white or a drop shadow finish.",
+  "description": "A tiny front adhesive logo, perfect for the inside of your mask or on a phone case so it faces the world through the glass. Printed in white on clear film.",
   "size": "30 x 9mm",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 2,
   "spin": "/products/front-adhesive-small/front-adhesive-small--spin.json",
-  "finishes": [
-    {
-      "label": "White",
-      "dropShadow": false
-    },
-    {
-      "label": "Drop shadow",
-      "dropShadow": true
-    }
-  ],
   "dropShadow": false,
-  "packLabel": "Logo 30mm"
+  "packLabel": "Logo 30mm",
+  "finish": "White on clear"
 }
