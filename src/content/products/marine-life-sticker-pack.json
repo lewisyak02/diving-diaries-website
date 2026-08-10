@@ -1,7 +1,7 @@
 {
   "name": "Sticker Pack",
-  "price": "",
-  "description": "Any five stickers, mixed and matched however you like. Doubles allowed if you have a favourite.",
+  "price": "15",
+  "description": "Any five stickers, mixed and matched however you like, for $15 instead of $25. Doubles allowed if you have a favourite.",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
@@ -11,13 +11,6 @@
     "from": [
       {
         "product": "circle-holographic"
-      },
-      {
-        "product": "front-adhesive-small"
-      },
-      {
-        "product": "front-adhesive-small",
-        "dropShadow": true
       },
       {
         "product": "front-adhesive-medium"
@@ -39,5 +32,6 @@
         "product": "hawksbill-turtle"
       }
     ]
-  }
+  },
+  "compareAt": "25"
 }

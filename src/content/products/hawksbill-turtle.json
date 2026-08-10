@@ -1,6 +1,6 @@
 {
   "name": "Hawksbill Turtle",
-  "price": "",
+  "price": "5",
   "image": "/products/hawksbill-turtle/hawksbill-turtle--poster.webp",
   "artwork": "/stickers/marine-life/hawksbill-turtle.webp",
   "dieCut": "contour",
@@ -12,5 +12,6 @@
   "soldOut": false,
   "order": 8,
   "spin": "/products/hawksbill-turtle/hawksbill-turtle--spin.json",
-  "packLabel": "Hawksbill"
+  "packLabel": "Hawksbill",
+  "stock": 0
 }

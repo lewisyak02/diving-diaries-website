@@ -1,6 +1,6 @@
 {
   "name": "Starfish Cuddles",
-  "price": "",
+  "price": "5",
   "image": "/products/starfish-cuddles/starfish-cuddles--poster.webp",
   "artwork": "/stickers/marine-life/starfish-cuddles.webp",
   "dieCut": "contour",
@@ -12,5 +12,6 @@
   "soldOut": false,
   "order": 6,
   "spin": "/products/starfish-cuddles/starfish-cuddles--spin.json",
-  "packLabel": "Starfish"
+  "packLabel": "Starfish",
+  "stock": 0
 }

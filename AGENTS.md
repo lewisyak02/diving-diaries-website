@@ -83,13 +83,22 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 
 ## Open items / TODO
 
-- **Shop / Stripe:** 8 sticker products: Circle Holographic, Front Adhesive Small/Medium, the
-  Marine Life Sticker Pack, and 4 individual marine life stickers (fiddler ray, starfish
-  cuddles, grey nurse shark, hawksbill turtle). The 5 newest have **no size set** because the
-  physical dimensions were never supplied. All 8 have
-  **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe Payment Links**
-  per product and pastes them into each product's `buyUrl` (finish options via a Stripe custom
-  dropdown). The on-card finish buttons are a **preview only** and carry nothing to checkout.
+- **Prices (Aug 2026):** every sticker $5, Front Adhesive Small $2.50 with a **minimum order
+  of 3** (`minOrder`, mix the finishes freely). Sticker Pack is **$15 for any 5**, shown against
+  a struck through `compareAt` of $25. Shipping is a flat **$1.50 Australia wide**, stated once
+  under the grid. The pack price only works because everything in it is $5: the small adhesive
+  was removed from `pack.from` for exactly that reason, so **do not add a differently priced
+  sticker to the pack** without rethinking the flat price.
+- **Stock:** `stock` on a product is a **manual count**, in whole units. `0` shows "Out of
+  stock", disables the buy button, and greys that sticker out in the pack picker (which also
+  caps how many of one design can go into a pack, and says "Not enough in stock" if the range
+  cannot fill one). `1..5` shows "Only N left". **Leave it unset to not track that product.**
+  Stripe cannot decrement it, so it has to be updated by hand after packing orders. Animals are
+  currently `0`; the rest are untracked until Lewis counts them.
+- **Stripe still to do:** Payment Links per product pasted into `buyUrl`. Set the small
+  adhesive link to adjustable quantity with a **minimum of 3**, since the site only states that
+  rule and cannot enforce it. The on-card finish buttons are a preview only; the pack passes
+  its selection as `client_reference_id`.
 - **Marine life artwork is AI generated**, not drawn by Lewis and not by a commissioned
   artist. He may collaborate with a real artist later. **Never write copy claiming these are
   hand drawn, illustrated, or his own art**, and do not imply a specific animal he met.

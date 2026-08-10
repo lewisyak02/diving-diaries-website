@@ -6,6 +6,8 @@ interface Option {
   name: string;
   label: string;
   thumb: string;
+  /** How many are in the drawer. Undefined means it is not being counted. */
+  stock?: number;
 }
 interface Props {
   choose: number;
@@ -19,12 +21,22 @@ const { choose, options, class: klass = '' } = Astro.props;
   <div class="pack-picker__grid">
     {
       options.map((o) => (
-        <div class="pack-pick" data-slug={o.key} data-name={o.name}>
-          <button type="button" class="pack-pick__add" aria-label={`Add one ${o.name}`}>
+        <div
+          class:list={['pack-pick', o.stock === 0 && 'is-out']}
+          data-slug={o.key}
+          data-name={o.name}
+          data-stock={o.stock === undefined ? undefined : String(o.stock)}
+        >
+          <button
+            type="button"
+            class="pack-pick__add"
+            disabled={o.stock === 0}
+            aria-label={o.stock === 0 ? `${o.name}, out of stock` : `Add one ${o.name}`}
+          >
             <img src={o.thumb} alt="" loading="lazy" decoding="async" />
             {/* Two of these are the same logo at different sizes, so the
                 thumbnail alone cannot tell them apart. */}
-            <span class="pack-pick__label">{o.label}</span>
+            <span class="pack-pick__label">{o.stock === 0 ? 'Sold out' : o.label}</span>
           </button>
           <span class="pack-pick__qty" aria-hidden="true" hidden>0</span>
           <button type="button" class="pack-pick__less" aria-label={`Remove one ${o.name}`} hidden>
@@ -65,6 +77,8 @@ const { choose, options, class: klass = '' } = Astro.props;
     transition: background 0.15s ease;
   }
   .pack-pick:hover { background: rgba(255, 255, 255, 0.14); }
+  .pack-pick.is-out { opacity: 0.38; }
+  .pack-pick.is-out .pack-pick__add { cursor: not-allowed; }
   .pack-pick.is-picked { background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 0 0 2px var(--color-purple-400, #8f88e8); }
   .pack-pick__add {
     display: flex;
@@ -184,6 +198,7 @@ const { choose, options, class: klass = '' } = Astro.props;
 
       for (const tile of tiles) {
         const slug = tile.dataset.slug!;
+        const stock = tile.dataset.stock === undefined ? Infinity : Number(tile.dataset.stock);
         const qty = picked.get(slug) ?? 0;
         const qtyEl = tile.querySelector<HTMLElement>('.pack-pick__qty')!;
         const less = tile.querySelector<HTMLButtonElement>('.pack-pick__less')!;
@@ -193,13 +208,21 @@ const { choose, options, class: klass = '' } = Astro.props;
         qtyEl.hidden = qty === 0;
         less.hidden = qty === 0;
         tile.classList.toggle('is-picked', qty > 0);
-        add.disabled = full;
+        // Cannot pick more of a sticker than there are in the drawer.
+        add.disabled = full || qty >= stock;
       }
 
       status.textContent = full
         ? `${choose} of ${choose} chosen`
         : `${n} of ${choose} chosen`;
       if (n === 0) status.textContent = `Pick any ${choose}`;
+      // If the range cannot add up to a full pack, say so rather than leaving
+      // someone tapping at greyed out tiles.
+      const available = tiles.reduce(
+        (sum, t) => sum + (t.dataset.stock === undefined ? Infinity : Number(t.dataset.stock)),
+        0
+      );
+      if (available < choose) status.textContent = 'Not enough in stock';
       bar.toggleAttribute('data-full', full);
       reset.hidden = n === 0;
 
@@ -217,9 +240,12 @@ const { choose, options, class: klass = '' } = Astro.props;
 
     for (const tile of tiles) {
       const slug = tile.dataset.slug!;
+      const stock = tile.dataset.stock === undefined ? Infinity : Number(tile.dataset.stock);
       tile.querySelector('.pack-pick__add')!.addEventListener('click', () => {
         if (total() >= choose) return;
-        picked.set(slug, (picked.get(slug) ?? 0) + 1);
+        const qty = picked.get(slug) ?? 0;
+        if (qty >= stock) return;
+        picked.set(slug, qty + 1);
         render();
       });
       tile.querySelector('.pack-pick__less')!.addEventListener('click', () => {

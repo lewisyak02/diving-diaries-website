@@ -29,6 +29,14 @@ const products = defineCollection({
   schema: z.object({
     name: z.string(),
     price: z.string().optional(),
+    // Shown struck through beside the price, for a bundle that saves money.
+    compareAt: z.string().optional(),
+    // How many are physically in the drawer. Leave unset to not track this one.
+    // 0 shows Sold out and blocks the buy button. This is a manual count, not
+    // live inventory: Stripe cannot decrement it, so update it after packing.
+    stock: z.number().int().min(0).optional(),
+    // Smallest quantity that can be ordered. Enforced at Stripe, stated here.
+    minOrder: z.number().int().min(1).optional(),
     image: z.string().optional(),
     // Source artwork the sticker viewer renders. Falls back to `image`.
     artwork: z.string().optional(),
