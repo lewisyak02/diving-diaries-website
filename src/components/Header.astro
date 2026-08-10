@@ -1,6 +1,7 @@
 ---
 import Wordmark from './Wordmark.astro';
 import { NAV, TAB_NAV } from '../lib/nav';
+import CartDrawer from './CartDrawer.astro';
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? path === '/' : path.startsWith(href);
@@ -34,6 +35,8 @@ const isActive = (href: string) =>
         ))
       }
     </ul>
+
+    <CartDrawer />
 
     <!-- Full menu, at every screen size -->
     <details id="nav-menu" class="relative ml-1">

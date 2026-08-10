@@ -95,10 +95,20 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   cannot fill one). `1..5` shows "Only N left". **Leave it unset to not track that product.**
   Stripe cannot decrement it, so it has to be updated by hand after packing orders. Animals are
   currently `0`; the rest are untracked until Lewis counts them.
-- **Stripe still to do:** Payment Links per product pasted into `buyUrl`. Set the small
-  adhesive link to adjustable quantity with a **minimum of 3**, since the site only states that
-  rule and cannot enforce it. The on-card finish buttons are a preview only; the pack passes
-  its selection as `client_reference_id`.
+- **Checkout is a real cart, not Payment Links.** `buyUrl` is no longer used. The flow is:
+  `src/lib/cart.ts` (localStorage, slugs and quantities only) → `CartDrawer.astro` (slide over,
+  lives on the header but **moves itself to `document.body` on init**, because the nav's
+  `backdrop-filter` would otherwise trap a `position: fixed` child) → `POST /api/checkout`
+  (`src/pages/api/checkout.ts`, `prerender = false`) → Stripe Checkout → `/order-confirmed`.
+  - **The server never trusts the cart.** Price, stock, `minOrder` and pack contents are all
+    re-read from the content collection and re-validated, so a tampered cart cannot buy a $5
+    sticker for a cent. Shipping ($1.50, AU only) is added server side.
+  - Pack contents ride along in session `metadata` so an order can be packed.
+  - Any markup injected by script (the cart lines) must be styled with `:global()`, since
+    dynamically created nodes never get Astro's scope attribute.
+  - **`STRIPE_SECRET_KEY` is the only secret.** Copy `.env.example` to `.env` for local work and
+    set the same variable in Netlify. Without it the endpoint returns a clean 503 and the shop
+    still browses.
 - **Marine life artwork is AI generated**, not drawn by Lewis and not by a commissioned
   artist. He may collaborate with a real artist later. **Never write copy claiming these are
   hand drawn, illustrated, or his own art**, and do not imply a specific animal he met.

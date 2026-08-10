@@ -226,9 +226,21 @@ const { choose, options, class: klass = '' } = Astro.props;
       bar.toggleAttribute('data-full', full);
       reset.hidden = n === 0;
 
+      // Publish the selection so the add to cart button can pick it up.
+      const chosen: string[] = [];
+      const chosenLabels: string[] = [];
+      for (const [k, q] of picked) {
+        for (let i = 0; i < q; i++) chosen.push(k);
+        const tile = tiles.find((t) => t.dataset.slug === k);
+        chosenLabels.push(`${tile?.querySelector('.pack-pick__label')?.textContent?.trim() ?? k} x${q}`);
+      }
+      picker.dataset.packChosen = chosen.join(',');
+      picker.dataset.packChosenLabels = chosenLabels.join('|');
+
       if (buy) {
         buy.toggleAttribute('data-pack-locked', !full);
         buy.setAttribute('aria-disabled', String(!full));
+        if (buy instanceof HTMLButtonElement) buy.disabled = !full;
         if (baseHref) {
           // Carry the choice through to Stripe, where it lands on the payment
           // as the client reference so the order can actually be packed.
