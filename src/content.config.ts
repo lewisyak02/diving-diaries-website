@@ -43,6 +43,14 @@ const products = defineCollection({
     finishes: z
       .array(z.object({ label: z.string(), dropShadow: z.boolean().default(false) }))
       .optional(),
+    // Mix and match bundle: pick `choose` stickers from `from` (product slugs).
+    // The card renders a picker instead of a single sticker.
+    pack: z
+      .object({
+        choose: z.number().default(5),
+        from: z.array(z.string()),
+      })
+      .optional(),
     // Pre rendered scrub sequence manifest, for low power devices.
     spin: z.string().optional(),
     // Short sentence describing the sticker, used as the viewer's alt text.

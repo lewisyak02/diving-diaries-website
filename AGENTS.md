@@ -90,12 +90,19 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   **blank prices and no buy links** (show "Coming soon"). Lewis sets up **Stripe Payment Links**
   per product and pastes them into each product's `buyUrl` (finish options via a Stripe custom
   dropdown). The on-card finish buttons are a **preview only** and carry nothing to checkout.
+- **Marine life artwork is AI generated**, not drawn by Lewis and not by a commissioned
+  artist. He may collaborate with a real artist later. **Never write copy claiming these are
+  hand drawn, illustrated, or his own art**, and do not imply a specific animal he met.
 - **Sticker artwork:** every product renders from the **real artwork** through the live WebGL
   viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`; Small +
   Medium = decal material from `dd-wordmark-white.png`, switchable White / Drop shadow; marine
   life = `matte` material on finished die cut art that carries its own cut line in its alpha.
-  The pack sheet is built by `scripts/sticker-shots/build-pack.mjs`, which arranges his files
-  and draws nothing.
+  The **Sticker Pack has no image**: its card is a mix and match picker (`StickerPicker.astro`)
+  where you choose 5 from the range, doubles allowed. The buy button stays locked until the
+  count is exact, then appends the choice to the Stripe link as `client_reference_id`
+  (e.g. `fiddler-rayx3_grey-nurse-sharkx1_hawksbill-turtlex1`), which shows on the payment in
+  the Stripe dashboard so the order can be packed. `scripts/sticker-shots/build-pack.mjs` can
+  still regenerate a pack photo if one is ever wanted.
   No AI mockups anywhere: the renderer draws his files directly. Front Adhesive Large was
   removed (Aug 2026) because he did not like it.
 - **Product shots** skip PNG above 600px wide (`PNG_MAX_WIDTH` in `shoot.mjs`). At 1200 the

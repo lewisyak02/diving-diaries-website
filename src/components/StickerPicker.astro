@@ -1,0 +1,207 @@
+---
+// Mix and match pack. Pick a fixed number of stickers from the range, with
+// repeats allowed, and the buy button stays shut until the count is exact.
+interface Option {
+  slug: string;
+  name: string;
+  thumb: string;
+}
+interface Props {
+  choose: number;
+  options: Option[];
+  class?: string;
+}
+const { choose, options, class: klass = '' } = Astro.props;
+---
+
+<div class:list={['pack-picker', klass]} data-pack-picker data-choose={String(choose)}>
+  <div class="pack-picker__grid">
+    {
+      options.map((o) => (
+        <div class="pack-pick" data-slug={o.slug} data-name={o.name}>
+          <button type="button" class="pack-pick__add" aria-label={`Add one ${o.name}`}>
+            <img src={o.thumb} alt="" loading="lazy" decoding="async" />
+          </button>
+          <span class="pack-pick__qty" aria-hidden="true" hidden>0</span>
+          <button type="button" class="pack-pick__less" aria-label={`Remove one ${o.name}`} hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+        </div>
+      ))
+    }
+  </div>
+
+  <p class="pack-picker__bar">
+    <span data-pack-status aria-live="polite">Pick any {choose}</span>
+    <button type="button" data-pack-reset hidden>Reset</button>
+  </p>
+</div>
+
+<style>
+  .pack-picker {
+    position: relative;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  .pack-picker__grid {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    align-content: center;
+  }
+  .pack-pick {
+    position: relative;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.07);
+    transition: background 0.15s ease;
+  }
+  .pack-pick:hover { background: rgba(255, 255, 255, 0.14); }
+  .pack-pick.is-picked { background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 0 0 2px var(--color-purple-400, #8f88e8); }
+  .pack-pick__add {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0.3rem;
+    cursor: pointer;
+    border-radius: inherit;
+  }
+  .pack-pick__add:disabled { cursor: not-allowed; opacity: 0.4; }
+  .pack-pick__add img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pack-pick__qty {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.3rem;
+    min-width: 1.4rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 999px;
+    background: var(--color-purple-500, #6e65dc);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    pointer-events: none;
+  }
+  .pack-pick__less {
+    position: absolute;
+    bottom: -0.3rem;
+    right: -0.3rem;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(4, 12, 36, 0.85);
+    color: #fff;
+    cursor: pointer;
+  }
+  .pack-pick__less:hover { background: rgba(4, 12, 36, 1); }
+
+  .pack-picker__bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.2rem 0.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .pack-picker__bar[data-full] { color: #fff; }
+  .pack-picker__bar button {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: underline;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pack-picker__bar button:hover { color: #fff; }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pack-picker]').forEach((picker) => {
+    const choose = Number(picker.dataset.choose ?? 5);
+    const tiles = [...picker.querySelectorAll<HTMLElement>('.pack-pick')];
+    const status = picker.querySelector<HTMLElement>('[data-pack-status]')!;
+    const bar = picker.querySelector<HTMLElement>('.pack-picker__bar')!;
+    const reset = picker.querySelector<HTMLButtonElement>('[data-pack-reset]')!;
+    const card = picker.closest('article');
+    const buy = card?.querySelector<HTMLElement>('[data-pack-buy]') ?? null;
+    const baseHref = buy?.getAttribute('href') ?? '';
+
+    const picked = new Map<string, number>();
+    const total = () => [...picked.values()].reduce((a, b) => a + b, 0);
+
+    function render() {
+      const n = total();
+      const full = n === choose;
+
+      for (const tile of tiles) {
+        const slug = tile.dataset.slug!;
+        const qty = picked.get(slug) ?? 0;
+        const qtyEl = tile.querySelector<HTMLElement>('.pack-pick__qty')!;
+        const less = tile.querySelector<HTMLButtonElement>('.pack-pick__less')!;
+        const add = tile.querySelector<HTMLButtonElement>('.pack-pick__add')!;
+
+        qtyEl.textContent = String(qty);
+        qtyEl.hidden = qty === 0;
+        less.hidden = qty === 0;
+        tile.classList.toggle('is-picked', qty > 0);
+        add.disabled = full;
+      }
+
+      status.textContent = full
+        ? `${choose} of ${choose} chosen`
+        : `${n} of ${choose} chosen`;
+      if (n === 0) status.textContent = `Pick any ${choose}`;
+      bar.toggleAttribute('data-full', full);
+      reset.hidden = n === 0;
+
+      if (buy) {
+        buy.toggleAttribute('data-pack-locked', !full);
+        buy.setAttribute('aria-disabled', String(!full));
+        if (baseHref) {
+          // Carry the choice through to Stripe, where it lands on the payment
+          // as the client reference so the order can actually be packed.
+          const ref = [...picked.entries()].map(([s, q]) => `${s}x${q}`).join('_').slice(0, 190);
+          buy.setAttribute('href', full ? `${baseHref}${baseHref.includes('?') ? '&' : '?'}client_reference_id=${ref}` : baseHref);
+        }
+      }
+    }
+
+    for (const tile of tiles) {
+      const slug = tile.dataset.slug!;
+      tile.querySelector('.pack-pick__add')!.addEventListener('click', () => {
+        if (total() >= choose) return;
+        picked.set(slug, (picked.get(slug) ?? 0) + 1);
+        render();
+      });
+      tile.querySelector('.pack-pick__less')!.addEventListener('click', () => {
+        const qty = (picked.get(slug) ?? 0) - 1;
+        if (qty > 0) picked.set(slug, qty);
+        else picked.delete(slug);
+        render();
+      });
+    }
+
+    reset.addEventListener('click', () => {
+      picked.clear();
+      render();
+    });
+
+    render();
+  });
+</script>

@@ -1,15 +1,19 @@
 {
-  "name": "Marine Life Sticker Pack",
+  "name": "Sticker Pack",
   "price": "",
-  "image": "/products/marine-life-sticker-pack/marine-life-sticker-pack--poster.webp",
-  "artwork": "/stickers/marine-life/sticker-pack.webp",
-  "dieCut": "none",
-  "material": "matte",
-  "altText": "A pack of five die cut stickers: grey nurse shark, hawksbill turtle, fiddler ray, sea stars, and the holographic logo circle. Drag it to tilt it.",
-  "description": "All four marine life stickers plus the holographic logo circle. The whole set in one go.",
+  "description": "Any five stickers, mixed and matched however you like. Doubles allowed if you have a favourite.",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 4,
-  "spin": "/products/marine-life-sticker-pack/marine-life-sticker-pack--spin.json"
+  "pack": {
+    "choose": 5,
+    "from": [
+      "circle-holographic",
+      "fiddler-ray",
+      "starfish-cuddles",
+      "grey-nurse-shark",
+      "hawksbill-turtle"
+    ]
+  }
 }
