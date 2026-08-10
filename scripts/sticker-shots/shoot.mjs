@@ -250,9 +250,10 @@ async function main() {
     const stamp = createHash('sha256')
       .update(art)
       .update(JSON.stringify({
-        v: 5, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
+        v: 6, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
         holographic: !!p.holographic, dieCut: p.dieCut ?? 'none',
         material: p.material ?? null, dropShadow: !!p.dropShadow,
+        finishes: p.finishes ?? null,
         VIGNETTE_CENTRE, VIGNETTE_EDGE, SHADOW_ALPHA,
         doSpin, spinRange, SPIN_FRAMES, SPIN_COLS, SPIN_FRAME_PX,
       }))
@@ -328,16 +329,26 @@ async function main() {
     // Poster: the still the card shows until the canvas is live. Rendered at
     // the live fit so nothing jumps when the swap happens.
     {
-      const png = Buffer.from(
-        (await page.evaluate(() => window.shootPoster(10))).split(',')[1],
-        'base64'
+      // One poster per finish the product actually sells, so the pack picker
+      // can show the drop shadow variant as its own choice.
+      const finishes = (p.finishes ?? [{ label: '', dropShadow: !!p.dropShadow }]).map(
+        (f) => !!f.dropShadow
       );
-      const info = await sharp(png).resize(800, 800)
-        .webp({ quality: 88, alphaQuality: 92 })
-        .toFile(path.join(siteDir, `${p.slug}--poster.webp`));
-      wroteSite.add(`${p.slug}--poster.webp`);
-      log(`  poster    10deg at the live fit`);
-      summary.push({ file: `${p.slug}--poster.webp`, width: 800, kb: Math.round(info.size / 1024) });
+      for (const ds of [...new Set(finishes)]) {
+        const png = Buffer.from(
+          (await page.evaluate((d) => window.shootPoster(10, d), ds)).split(',')[1],
+          'base64'
+        );
+        const name = ds ? `${p.slug}--poster-drop-shadow.webp` : `${p.slug}--poster.webp`;
+        const info = await sharp(png).resize(800, 800)
+          .webp({ quality: 88, alphaQuality: 92 })
+          .toFile(path.join(siteDir, name));
+        wroteSite.add(name);
+        log(`  poster    10deg at the live fit${ds ? ', drop shadow' : ''}`);
+        summary.push({ file: name, width: 800, kb: Math.round(info.size / 1024) });
+      }
+      // Leave the renderer on the product's own default for the scrub sheet.
+      await page.evaluate((d) => window.shootPoster(0, d), !!p.dropShadow);
     }
 
     // The poster switched the renderer to the live fit, which is what the

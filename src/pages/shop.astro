@@ -10,16 +10,25 @@ const products = (await getCollection('products')).sort(
 
 // A pack picks from the other products, so it needs to look them up by slug.
 const bySlug = new Map(products.map((p) => [p.id, p]));
-const packOptions = (slugs: string[]) =>
-  slugs
-    .map((slug) => bySlug.get(slug))
-    .filter((p) => p !== undefined)
-    .map((p) => ({
-      slug: p.id,
-      name: p.data.name,
-      label: p.data.packLabel ?? p.data.name,
-      thumb: p.data.image ?? p.data.artwork ?? '',
-    }));
+const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
+  entries
+    .map((e) => ({ e, p: bySlug.get(e.product) }))
+    .filter((x) => x.p !== undefined)
+    .map(({ e, p }) => {
+      // A finish is its own line item, so it needs its own key, label and
+      // thumbnail. The drop shadow poster sits beside the plain one.
+      const finish = e.dropShadow
+        ? p!.data.finishes?.find((f) => f.dropShadow)?.label ?? 'Drop shadow'
+        : p!.data.finishes?.find((f) => !f.dropShadow)?.label ?? '';
+      const base = p!.data.packLabel ?? p!.data.name;
+      const poster = p!.data.image ?? p!.data.artwork ?? '';
+      return {
+        key: e.dropShadow ? `${p!.id}-drop-shadow` : p!.id,
+        name: finish ? `${p!.data.name}, ${finish.toLowerCase()}` : p!.data.name,
+        label: finish ? `${base} ${finish}` : base,
+        thumb: e.dropShadow ? poster.replace(/--poster\.webp$/, '--poster-drop-shadow.webp') : poster,
+      };
+    });
 ---
 
 <Layout

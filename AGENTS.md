@@ -95,8 +95,7 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   hand drawn, illustrated, or his own art**, and do not imply a specific animal he met.
 - **Sticker artwork:** every product renders from the **real artwork** through the live WebGL
   viewer (`src/lib/holo/`, see its README). Circle = holo foil from `dd-tile.png`; Small +
-  Medium = decal material from `dd-wordmark-white.png`, **white only** (the drop shadow
-  finish was dropped Aug 2026: it is not a product he sells); marine
+  Medium = decal material from `dd-wordmark-white.png`, switchable White / Drop shadow; marine
   life = `matte` material on finished die cut art that carries its own cut line in its alpha.
   The **Sticker Pack has no image**: its card is a mix and match picker (`StickerPicker.astro`)
   where you choose 5 from the range, doubles allowed. The buy button stays locked until the
@@ -118,8 +117,12 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   cutout with some transparent margin around it.
 - **Bordered marine PNGs** for listings live in `Stickers/Marine Life/Bordered/` (HQ, not the
   repo), generated the same way the site draws the cut line.
-- **Pack picker labels:** `packLabel` on each product. Two of the options are the same logo at
-  different sizes, so the thumbnail alone cannot tell them apart.
+- **Pack entries are variants, not products.** `pack.from` is a list of
+  `{ product, dropShadow }`, so a logo in white and the same logo with a drop shadow are two
+  separate choices with their own key, label and thumbnail (9 options in total). `shoot.mjs`
+  renders one poster per finish a product sells: `--poster.webp` and `--poster-drop-shadow.webp`.
+  Labels come from `packLabel` plus the finish name, because several thumbnails are the same
+  logo and cannot be told apart by picture alone.
 - **Card backdrop** is a deliberate mid tone (`.sticker-backdrop`): white ink vanishes on a
   light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
   `bg-ocean-900`.

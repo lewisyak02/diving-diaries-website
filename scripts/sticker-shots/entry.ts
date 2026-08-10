@@ -7,7 +7,7 @@ declare global {
   interface Window {
     setupSticker: (opts: HoloOptions & { pixelSize: number }) => Promise<boolean>;
     shootAt: (yawDeg: number, tiltDeg?: number) => string;
-    shootPoster: (yawDeg: number) => string;
+    shootPoster: (yawDeg: number, dropShadow?: boolean) => string;
   }
 }
 
@@ -30,10 +30,10 @@ window.shootAt = (yawDeg, tiltDeg = 0) => {
 
 // Poster frames use the fit the live shop viewer uses, so swapping the canvas
 // in over the poster does not make the sticker jump size.
-window.shootPoster = (yawDeg) => {
+window.shootPoster = (yawDeg, dropShadow = false) => {
   if (!viewer) throw new Error('sticker not set up');
   viewer.setFit(viewer.liveFit);
+  viewer.setDropShadow(dropShadow);
   viewer.setAngle(yawDeg, 0);
-  const png = canvas.toDataURL('image/png');
-  return png;
+  return canvas.toDataURL('image/png');
 };

@@ -50,7 +50,14 @@ const products = defineCollection({
     pack: z
       .object({
         choose: z.number().default(5),
-        from: z.array(z.string()),
+        // Each entry is a buyable variant, not just a product: a logo in white
+        // and the same logo with a drop shadow are two different stickers.
+        from: z.array(
+          z.object({
+            product: z.string(),
+            dropShadow: z.boolean().default(false),
+          })
+        ),
       })
       .optional(),
     // Pre rendered scrub sequence manifest, for low power devices.

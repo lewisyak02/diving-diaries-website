@@ -9,13 +9,35 @@
   "pack": {
     "choose": 5,
     "from": [
-      "circle-holographic",
-      "front-adhesive-small",
-      "front-adhesive-medium",
-      "fiddler-ray",
-      "starfish-cuddles",
-      "grey-nurse-shark",
-      "hawksbill-turtle"
+      {
+        "product": "circle-holographic"
+      },
+      {
+        "product": "front-adhesive-small"
+      },
+      {
+        "product": "front-adhesive-small",
+        "dropShadow": true
+      },
+      {
+        "product": "front-adhesive-medium"
+      },
+      {
+        "product": "front-adhesive-medium",
+        "dropShadow": true
+      },
+      {
+        "product": "fiddler-ray"
+      },
+      {
+        "product": "starfish-cuddles"
+      },
+      {
+        "product": "grey-nurse-shark"
+      },
+      {
+        "product": "hawksbill-turtle"
+      }
     ]
   }
 }

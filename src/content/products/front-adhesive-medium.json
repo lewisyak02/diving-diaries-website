@@ -7,7 +7,7 @@
   "dropShadow": false,
   "dieCut": "none",
   "altText": "An 83mm front adhesive DDIARIES decal, the wordmark in white ink on clear film. Drag it to tilt it in the light.",
-  "description": "The everyday size. A front adhesive logo that sits flat on car windows, laptop cases, and glass doors, facing out so it reads from the other side. Printed in white on clear film.",
+  "description": "The everyday size. A front adhesive logo that sits flat on car windows, laptop cases, and glass doors, facing out so it reads from the other side. Choose white or a drop shadow finish.",
   "size": "83 x 24mm",
   "holographic": false,
   "buyUrl": "",
@@ -15,5 +15,14 @@
   "order": 3,
   "spin": "/products/front-adhesive-medium/front-adhesive-medium--spin.json",
   "packLabel": "Logo 83mm",
-  "finish": "White on clear"
+  "finishes": [
+    {
+      "label": "White",
+      "dropShadow": false
+    },
+    {
+      "label": "Drop shadow",
+      "dropShadow": true
+    }
+  ]
 }
