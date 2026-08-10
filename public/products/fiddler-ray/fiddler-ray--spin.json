@@ -3,7 +3,7 @@
   "cols": 6,
   "rows": 6,
   "framePx": 240,
-  "yawFrom": -60,
-  "yawTo": 60,
+  "yawFrom": -28,
+  "yawTo": 28,
   "sheet": "/products/fiddler-ray/fiddler-ray--spin-sheet.webp"
 }

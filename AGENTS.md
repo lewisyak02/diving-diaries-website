@@ -123,6 +123,9 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   renders one poster per finish a product sells: `--poster.webp` and `--poster-drop-shadow.webp`.
   Labels come from `packLabel` plus the finish name, because several thumbnails are the same
   logo and cannot be told apart by picture alone.
+- **Motion range is per material** (`MOTION` in `viewer.ts`): holographic swings ±60°, every
+  other sticker ±28° with a shallower bow, because only the foil pays off a big swing. The
+  scrub sheets follow whatever the live viewer allows.
 - **Card backdrop** is a deliberate mid tone (`.sticker-backdrop`): white ink vanishes on a
   light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
   `bg-ocean-900`.

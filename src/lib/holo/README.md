@@ -110,6 +110,23 @@ image, set `image` and leave `artwork` out.
 3. If the artwork is a seamless tile, keep `tileScale` at 1.15. If it is a single finished
    design that should be seen whole, pass `tileScale={1}` and `dieCut="none"`.
 
+## Motion range
+
+Two profiles, in `MOTION` at the top of `viewer.ts`:
+
+| | Drag | Tilt | Idle | Bow |
+|---|---|---|---|---|
+| **Holographic** | ±60° | ±15° | ±8° | 0.055 |
+| **Everything else** | ±28° | ±8° | ±4° | 0.032 |
+
+The holographic sticker earns the wide swing: the foil shifts colour right through it, so the
+movement is the whole point. Flat vinyl gets no such payoff and at the same angles just reads
+as floppy, so it moves less and sits stiffer. Drag sensitivity follows the limit, so the
+tighter range also feels tighter under the finger rather than just clamping sooner.
+
+The scrub sequence picks the matching range automatically, so the low power fallback feels
+like the live thing. `--spin-range` still overrides it.
+
 ## Accessibility and motion
 
 - Pointer Events throughout, so mouse, touch and pen are one code path.

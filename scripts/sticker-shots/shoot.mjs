@@ -71,9 +71,10 @@ const onlySlug = args.includes('--slug') ? args[args.indexOf('--slug') + 1] : nu
 const doSpin = args.includes('--spin');
 // The frames span -range..+range. Default matches the viewer's own drag limit,
 // so a scrub feels like the live thing. Pass 180 for a literal 360 spin.
-const spinRange = args.includes('--spin-range')
+// Unset means "match whatever the live viewer allows for this material".
+const spinRangeArg = args.includes('--spin-range')
   ? Number(args[args.indexOf('--spin-range') + 1])
-  : 60;
+  : null;
 
 const log = (...a) => console.log(...a);
 
@@ -250,12 +251,12 @@ async function main() {
     const stamp = createHash('sha256')
       .update(art)
       .update(JSON.stringify({
-        v: 6, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
+        v: 7, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
         holographic: !!p.holographic, dieCut: p.dieCut ?? 'none',
         material: p.material ?? null, dropShadow: !!p.dropShadow,
         finishes: p.finishes ?? null,
         VIGNETTE_CENTRE, VIGNETTE_EDGE, SHADOW_ALPHA,
-        doSpin, spinRange, SPIN_FRAMES, SPIN_COLS, SPIN_FRAME_PX,
+        doSpin, spinRangeArg, SPIN_FRAMES, SPIN_COLS, SPIN_FRAME_PX,
       }))
       .digest('hex')
       .slice(0, 16);
@@ -354,6 +355,7 @@ async function main() {
     // The poster switched the renderer to the live fit, which is what the
     // scrub wants too: it stands in for the live viewer, not for a shot.
     if (doSpin) {
+      const spinRange = spinRangeArg ?? (await page.evaluate(() => window.yawLimit()));
       const rows = Math.ceil(SPIN_FRAMES / SPIN_COLS);
       const tiles = [];
       for (let i = 0; i < SPIN_FRAMES; i++) {

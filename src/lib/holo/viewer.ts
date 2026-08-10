@@ -101,11 +101,17 @@ function addContourCut(img: HTMLImageElement, widthFraction: number): HTMLCanvas
 }
 
 const DEG = Math.PI / 180;
-const MAX_YAW = 60 * DEG;
-const MAX_TILT = 15 * DEG;
-const NUDGE = 5 * DEG;
+/**
+ * How far a sticker swings. The holographic one earns a wide range because the
+ * foil shifts colour right through it, so the movement is the point. Flat vinyl
+ * has no such payoff and just reads as floppy at the same angles, so it gets a
+ * tighter, stiffer range and a shallower bow.
+ */
+const MOTION = {
+  free:       { yaw: 60, tilt: 15, nudge: 5, idle: 8, bow: 0.055 },
+  restrained: { yaw: 28, tilt: 8,  nudge: 4, idle: 4, bow: 0.032 },
+} as const;
 const SPRING_MS = 600;
-const IDLE_AMP = 8 * DEG;
 const GRID = 24; // plane subdivisions, enough for the bow to read
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -241,7 +247,13 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   // Camera distance d = 2.6 x diameter. The plane spans -1..1, so the
   // diameter is 2 units and d works out at 5.2.
   gl.uniform1f(u.dist, 2.6 * 2);
-  gl.uniform1f(u.bow, 0.055);
+  // Flat vinyl sits stiffer than a holographic disc, and swings less far.
+  const motion = opts.material === 'holo' ? MOTION.free : MOTION.restrained;
+  const MAX_YAW = motion.yaw * DEG;
+  const MAX_TILT = motion.tilt * DEG;
+  const NUDGE = motion.nudge * DEG;
+  const IDLE_AMP = motion.idle * DEG;
+  gl.uniform1f(u.bow, motion.bow);
 
   // Decal geometry, all of it derived from the logo's own proportions.
   // Working in units where the logo is 1 high.
@@ -381,7 +393,13 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     startY = e.clientY;
     startYaw = yaw;
     startTilt = tilt;
-    canvas.setPointerCapture(e.pointerId);
+    // Throws if the pointer is already gone, which a fast tap or a synthetic
+    // event can manage. Losing capture is survivable; an uncaught error is not.
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* carry on without capture */
+    }
     schedule();
   };
 
@@ -406,7 +424,11 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
     if (e.pointerId !== pointerId) return;
     dragging = false;
     pointerId = null;
-    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    try {
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
     settle();
   };
 
@@ -473,6 +495,8 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
      */
     /** The fit the live shop viewer uses, so a poster can match it exactly. */
     liveFit,
+    /** Drag limit in degrees, so a scrub sequence can cover the same range. */
+    yawLimit: motion.yaw,
     /** Shots override the fit to leave room for the contact shadow. */
     setFit(v: number) {
       fit = v;

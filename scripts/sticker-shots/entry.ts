@@ -8,6 +8,7 @@ declare global {
     setupSticker: (opts: HoloOptions & { pixelSize: number }) => Promise<boolean>;
     shootAt: (yawDeg: number, tiltDeg?: number) => string;
     shootPoster: (yawDeg: number, dropShadow?: boolean) => string;
+    yawLimit: () => number;
   }
 }
 
@@ -20,6 +21,13 @@ window.setupSticker = async (opts) => {
   canvas.style.height = opts.pixelSize + 'px';
   viewer = await createHoloViewer(canvas, { ...opts, interactive: false });
   return viewer !== null;
+};
+
+// The scrub sequence should sweep the same range the live viewer allows, which
+// now depends on the material.
+window.yawLimit = () => {
+  if (!viewer) throw new Error('sticker not set up');
+  return viewer.yawLimit;
 };
 
 window.shootAt = (yawDeg, tiltDeg = 0) => {
