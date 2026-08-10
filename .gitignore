@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 # Local Netlify folder
 .netlify
+
+# Listing and social shots. Not served by the site, and regenerated with
+# `node scripts/sticker-shots/shoot.mjs --spin`, so they stay out of git.
+product-shots/

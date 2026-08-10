@@ -26,7 +26,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
 const PRODUCTS = path.join(ROOT, 'src/content/products');
 const PUBLIC = path.join(ROOT, 'public');
-const OUT_ROOT = path.join(PUBLIC, 'products');
+// The site only serves the poster and the scrub sheet. The five angle shots
+// are for listings and socials, so they live outside public/ and never ship.
+const SITE_ROOT = path.join(PUBLIC, 'products');
+const SHOTS_ROOT = path.join(ROOT, 'product-shots');
 
 const SOURCE_PX = 2400;
 // A little smaller than on the shop, to leave the contact shadow somewhere to go.
@@ -60,7 +63,7 @@ const SHADOW_BLUR_AT_2400 = 26 * (SOURCE_PX / 1200); // 26px is quoted at 1200
 // 36 frames, as one sprite sheet so it is a single request.
 const SPIN_FRAMES = 36;
 const SPIN_COLS = 6;
-const SPIN_FRAME_PX = 300;
+const SPIN_FRAME_PX = 240;
 
 const args = process.argv.slice(2);
 const force = args.includes('--force');
@@ -168,7 +171,18 @@ async function contactShadow(stickerPng, size) {
     .toBuffer();
 }
 
-async function writeVariants(buf, dir, slug, shot, summary) {
+/** Delete anything in a folder that this run did not write. */
+async function prune(dir, keep, label) {
+  let removed = 0;
+  for (const f of await fs.readdir(dir).catch(() => [])) {
+    if (keep.has(f)) continue;
+    await fs.rm(path.join(dir, f), { force: true });
+    removed++;
+  }
+  if (removed) log(`  pruned    ${removed} stale file(s) from ${label}`);
+}
+
+async function writeVariants(buf, dir, slug, shot, summary, written) {
   for (const width of WIDTHS) {
     const resized = sharp(buf).resize(width, width, { fit: 'inside' });
     for (const fmt of FORMATS) {
@@ -179,6 +193,7 @@ async function writeVariants(buf, dir, slug, shot, summary) {
       if (fmt === 'webp') pipe = pipe.webp({ quality: 88, alphaQuality: 92 });
       if (fmt === 'avif') pipe = pipe.avif({ quality: 58 });
       const info = await pipe.toFile(file);
+      written.add(path.basename(file));
       summary.push({ file: path.basename(file), width, kb: Math.round(info.size / 1024) });
     }
   }
@@ -222,8 +237,12 @@ async function main() {
       continue;
     }
 
-    const dir = path.join(OUT_ROOT, p.slug);
-    await fs.mkdir(dir, { recursive: true });
+    const shotDir = path.join(SHOTS_ROOT, p.slug);
+    const siteDir = path.join(SITE_ROOT, p.slug);
+    await fs.mkdir(shotDir, { recursive: true });
+    await fs.mkdir(siteDir, { recursive: true });
+    const wroteShots = new Set();
+    const wroteSite = new Set();
 
     // Idempotence: a fingerprint of the artwork plus every setting that
     // affects the output. Unchanged inputs mean the shots are already correct.
@@ -231,7 +250,7 @@ async function main() {
     const stamp = createHash('sha256')
       .update(art)
       .update(JSON.stringify({
-        v: 4, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
+        v: 5, SHOTS, WIDTHS, FORMATS, SOURCE_PX, SHOT_FIT,
         holographic: !!p.holographic, dieCut: p.dieCut ?? 'none',
         material: p.material ?? null, dropShadow: !!p.dropShadow,
         VIGNETTE_CENTRE, VIGNETTE_EDGE, SHADOW_ALPHA,
@@ -300,8 +319,8 @@ async function main() {
         .png()
         .toBuffer();
 
-      await writeVariants(onAlpha, dir, p.slug, shot.name, summary);
-      await writeVariants(onDark, dir, p.slug, `${shot.name}-dark`, summary);
+      await writeVariants(onAlpha, shotDir, p.slug, shot.name, summary, wroteShots);
+      await writeVariants(onDark, shotDir, p.slug, `${shot.name}-dark`, summary, wroteShots);
       log(`  ${shot.name.padEnd(8)} ${String(shot.yaw).padStart(3)}deg  +  ${shot.name}-dark`);
       rendered++;
     }
@@ -315,7 +334,8 @@ async function main() {
       );
       const info = await sharp(png).resize(800, 800)
         .webp({ quality: 88, alphaQuality: 92 })
-        .toFile(path.join(dir, `${p.slug}--poster.webp`));
+        .toFile(path.join(siteDir, `${p.slug}--poster.webp`));
+      wroteSite.add(`${p.slug}--poster.webp`);
       log(`  poster    10deg at the live fit`);
       summary.push({ file: `${p.slug}--poster.webp`, width: 800, kb: Math.round(info.size / 1024) });
     }
@@ -349,11 +369,13 @@ async function main() {
 
       // WebP only. Any device that can run a scrub can decode WebP, and the
       // PNG equivalent was 3MB for a file whose whole job is being light.
-      const webp = await sheet.clone().webp({ quality: 82, alphaQuality: 88 })
-        .toFile(path.join(dir, `${p.slug}--spin-sheet.webp`));
+      const webp = await sheet.clone().webp({ quality: 80, alphaQuality: 86 })
+        .toFile(path.join(siteDir, `${p.slug}--spin-sheet.webp`));
+      wroteSite.add(`${p.slug}--spin-sheet.webp`);
 
+      wroteSite.add(`${p.slug}--spin.json`);
       await fs.writeFile(
-        path.join(dir, `${p.slug}--spin.json`),
+        path.join(siteDir, `${p.slug}--spin.json`),
         JSON.stringify({
           frames: SPIN_FRAMES, cols: SPIN_COLS, rows,
           framePx: SPIN_FRAME_PX, yawFrom: -spinRange, yawTo: spinRange,
@@ -364,6 +386,11 @@ async function main() {
       log(`  spin     ${SPIN_FRAMES} frames, ${-spinRange} to ${spinRange}deg, ${SPIN_COLS}x${rows} sheet`);
       summary.push({ file: `${p.slug}--spin-sheet.webp`, width: SPIN_COLS * SPIN_FRAME_PX, kb: Math.round(webp.size / 1024) });
     }
+
+    // Anything left over from an earlier run is dead weight in the repo and,
+    // for public/, in every deploy.
+    await prune(shotDir, wroteShots, 'product-shots/' + p.slug);
+    if (doSpin) await prune(siteDir, wroteSite, 'public/products/' + p.slug);
 
     await fs.writeFile(stampFile, stamp);
   }

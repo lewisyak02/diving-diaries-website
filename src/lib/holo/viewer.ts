@@ -1,7 +1,7 @@
 import { VERT, FRAG } from './shaders';
 
 export type Material = 'holo' | 'matte' | 'decal';
-export type DieCut = 'circle' | 'none';
+export type DieCut = 'circle' | 'none' | 'contour';
 
 export interface HoloOptions {
   src: string;
@@ -65,6 +65,39 @@ function cropToInk(img: HTMLImageElement): HTMLCanvasElement | null {
   out.height = maxY - minY + 1;
   out.getContext('2d')!.drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
   return out;
+}
+
+/**
+ * Grow a white contour cut around the artwork, the way a printer cuts a sticker
+ * a few millimetres outside the design. Done once when the texture loads rather
+ * than per pixel per frame, which keeps it smooth and free at render time.
+ */
+function addContourCut(img: HTMLImageElement, widthFraction: number): HTMLCanvasElement {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d')!;
+
+  // Dilate the silhouette by stamping the artwork around a ring. Two radii, so
+  // the fill stays solid on thin shapes like fins and tails.
+  const r = Math.max(1, Math.round(Math.min(w, h) * widthFraction));
+  const STEPS = 48;
+  for (let i = 0; i < STEPS; i++) {
+    const a = (i / STEPS) * Math.PI * 2;
+    ctx.drawImage(img, Math.cos(a) * r, Math.sin(a) * r, w, h);
+    ctx.drawImage(img, Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.6, w, h);
+  }
+
+  // Flatten that dilated shape to the vinyl white, then lay the artwork on top.
+  ctx.globalCompositeOperation = 'source-in';
+  ctx.fillStyle = '#f8f8fa';
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(img, 0, 0, w, h);
+
+  return c;
 }
 
 const DEG = Math.PI / 180;
@@ -152,12 +185,15 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
 
-  // Crop to the artwork's own ink. A decal measures its print margin from
-  // this, and a finished die cut design fills its card instead of floating in
-  // whatever transparent padding the file happened to carry. On artwork with
-  // no transparency this is a no op.
+  // A decal measures its print margin from the logo's own ink, so it gets
+  // cropped. Contour cut art keeps its transparent margin instead: that is the
+  // room the cut line grows into.
   const cropped =
-    opts.material !== 'holo' ? cropToInk(image) : null;
+    opts.material === 'decal'
+      ? cropToInk(image)
+      : opts.dieCut === 'contour'
+        ? addContourCut(image, 0.022)
+        : null;
   const source: TexImageSource = cropped ?? image;
   const srcW = cropped ? cropped.width : image.naturalWidth;
   const srcH = cropped ? cropped.height : image.naturalHeight;
@@ -198,7 +234,7 @@ export async function createHoloViewer(canvas: HTMLCanvasElement, opts: HoloOpti
   gl.uniform1f(u.intensity, opts.intensity);
   gl.uniform1f(u.hueScale, opts.hueScale);
   gl.uniform1f(u.material, isDecal ? 2 : opts.material === 'holo' ? 0 : 1);
-  gl.uniform1f(u.dieCut, opts.dieCut === 'circle' ? 0 : 1);
+  gl.uniform1f(u.dieCut, opts.dieCut === 'circle' ? 0 : opts.dieCut === 'contour' ? 2 : 1);
   gl.uniform1f(u.tileScale, opts.tileScale);
   gl.uniform1f(u.grain, opts.grain);
   gl.uniform1f(u.seed, Math.random() * 100);

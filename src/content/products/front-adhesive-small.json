@@ -23,5 +23,6 @@
       "dropShadow": true
     }
   ],
-  "dropShadow": false
+  "dropShadow": false,
+  "packLabel": "Logo 30mm"
 }

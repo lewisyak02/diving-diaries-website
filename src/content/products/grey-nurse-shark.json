@@ -3,7 +3,7 @@
   "price": "",
   "image": "/products/grey-nurse-shark/grey-nurse-shark--poster.webp",
   "artwork": "/stickers/marine-life/grey-nurse-shark.webp",
-  "dieCut": "none",
+  "dieCut": "contour",
   "material": "matte",
   "altText": "A die cut sticker of a grey nurse shark in profile, speckled and ragged toothed. Drag it to tilt it.",
   "description": "All teeth and no threat. Grey nurse sharks are critically endangered on Australia's east coast, which makes every encounter with one worth remembering.",
@@ -11,5 +11,6 @@
   "buyUrl": "",
   "soldOut": false,
   "order": 7,
-  "spin": "/products/grey-nurse-shark/grey-nurse-shark--spin.json"
+  "spin": "/products/grey-nurse-shark/grey-nurse-shark--spin.json",
+  "packLabel": "Grey Nurse"
 }

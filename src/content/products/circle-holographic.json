@@ -12,5 +12,6 @@
   "holographic": true,
   "buyUrl": "",
   "soldOut": false,
-  "order": 1
+  "order": 1,
+  "packLabel": "Circle Holo"
 }

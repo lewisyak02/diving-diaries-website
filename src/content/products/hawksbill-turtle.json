@@ -3,7 +3,7 @@
   "price": "",
   "image": "/products/hawksbill-turtle/hawksbill-turtle--poster.webp",
   "artwork": "/stickers/marine-life/hawksbill-turtle.webp",
-  "dieCut": "none",
+  "dieCut": "contour",
   "material": "matte",
   "altText": "A die cut sticker of a hawksbill turtle mid swim, patterned shell and flippers out. Drag it to tilt it.",
   "description": "Hawksbills are critically endangered, and watching one work its way along a reef never gets old.",
@@ -11,5 +11,6 @@
   "buyUrl": "",
   "soldOut": false,
   "order": 8,
-  "spin": "/products/hawksbill-turtle/hawksbill-turtle--spin.json"
+  "spin": "/products/hawksbill-turtle/hawksbill-turtle--spin.json",
+  "packLabel": "Hawksbill"
 }

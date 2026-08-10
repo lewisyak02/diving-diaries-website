@@ -198,9 +198,13 @@ void main() {
   float r = length(vNxy);
   float alpha = uDieCut < 0.5 ? 1.0 - smoothstep(1.0 - uAA, 1.0, r) : 1.0;
 
-  // Artwork that carries its own cut line, as a finished design with a
-  // transparent surround, keeps that shape.
-  if (uMaterial > 0.5) alpha *= texture2D(uTex, uv).a;
+  // Artwork that carries its own cut line keeps the shape it was given. For a
+  // contour cut the border was grown into the texture when it loaded, so by
+  // here it is simply part of the artwork.
+  if (uMaterial > 0.5) {
+
+    alpha *= texture2D(uTex, uv).a;
+  }
 
   // Thin unprinted rim just inside the cut line, and it clips the sheen with it.
   if (uDieCut < 0.5) {

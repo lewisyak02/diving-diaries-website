@@ -17,6 +17,7 @@ const packOptions = (slugs: string[]) =>
     .map((p) => ({
       slug: p.id,
       name: p.data.name,
+      label: p.data.packLabel ?? p.data.name,
       thumb: p.data.image ?? p.data.artwork ?? '',
     }));
 ---
@@ -139,7 +140,8 @@ const packOptions = (slugs: string[]) =>
   // nothing about WebGL; it just says which finish it wants.
   document.querySelectorAll<HTMLElement>('article').forEach((card) => {
     const buttons = card.querySelectorAll<HTMLButtonElement>('[data-finish]');
-    if (!buttons.length) return;
+    if (!buttons.length || card.dataset.finishBound) return;
+    card.dataset.finishBound = '1';
     const stage = card.querySelector<HTMLElement>('[data-holo]');
 
     buttons.forEach((btn) => {

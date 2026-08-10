@@ -4,6 +4,7 @@
 interface Option {
   slug: string;
   name: string;
+  label: string;
   thumb: string;
 }
 interface Props {
@@ -21,6 +22,9 @@ const { choose, options, class: klass = '' } = Astro.props;
         <div class="pack-pick" data-slug={o.slug} data-name={o.name}>
           <button type="button" class="pack-pick__add" aria-label={`Add one ${o.name}`}>
             <img src={o.thumb} alt="" loading="lazy" decoding="async" />
+            {/* Two of these are the same logo at different sizes, so the
+                thumbnail alone cannot tell them apart. */}
+            <span class="pack-pick__label">{o.label}</span>
           </button>
           <span class="pack-pick__qty" aria-hidden="true" hidden>0</span>
           <button type="button" class="pack-pick__less" aria-label={`Remove one ${o.name}`} hidden>
@@ -50,8 +54,8 @@ const { choose, options, class: klass = '' } = Astro.props;
   .pack-picker__grid {
     display: grid;
     flex: 1;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
     align-content: center;
   }
   .pack-pick {
@@ -63,17 +67,36 @@ const { choose, options, class: klass = '' } = Astro.props;
   .pack-pick:hover { background: rgba(255, 255, 255, 0.14); }
   .pack-pick.is-picked { background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 0 0 2px var(--color-purple-400, #8f88e8); }
   .pack-pick__add {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
     width: 100%;
     height: 100%;
-    padding: 0.3rem;
+    padding: 0.25rem 0.15rem 0.2rem;
     cursor: pointer;
     border-radius: inherit;
   }
+  .pack-pick__label {
+    display: block;
+    width: 100%;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+    text-align: center;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pack-pick.is-picked .pack-pick__label { color: #fff; }
   .pack-pick__add:disabled { cursor: not-allowed; opacity: 0.4; }
   .pack-pick__add img {
+    flex: 1;
     width: 100%;
-    height: 100%;
+    min-height: 0;
     object-fit: contain;
   }
   .pack-pick__qty {
@@ -133,6 +156,11 @@ const { choose, options, class: klass = '' } = Astro.props;
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-pack-picker]').forEach((picker) => {
+    // Bind once. A hot reload, or a client side navigation later, would
+    // otherwise stack a second set of listeners and count every tap twice.
+    if (picker.dataset.packBound) return;
+    picker.dataset.packBound = '1';
+
     const choose = Number(picker.dataset.choose ?? 5);
     const tiles = [...picker.querySelectorAll<HTMLElement>('.pack-pick')];
     const status = picker.querySelector<HTMLElement>('[data-pack-status]')!;

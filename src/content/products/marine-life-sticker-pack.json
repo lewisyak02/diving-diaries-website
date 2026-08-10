@@ -10,6 +10,8 @@
     "choose": 5,
     "from": [
       "circle-holographic",
+      "front-adhesive-small",
+      "front-adhesive-medium",
       "fiddler-ray",
       "starfish-cuddles",
       "grey-nurse-shark",

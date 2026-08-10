@@ -33,7 +33,7 @@ const products = defineCollection({
     // Source artwork the sticker viewer renders. Falls back to `image`.
     artwork: z.string().optional(),
     // Die cut shape applied by the renderer, not baked into the artwork.
-    dieCut: z.enum(['circle', 'none']).default('none'),
+    dieCut: z.enum(['circle', 'none', 'contour']).default('none'),
     // How the surface is rendered. Falls back to `holographic` when unset.
     material: z.enum(['holo', 'matte', 'decal']).optional(),
     // Decal only: preview the drop shadow finish instead of plain white.
@@ -43,6 +43,8 @@ const products = defineCollection({
     finishes: z
       .array(z.object({ label: z.string(), dropShadow: z.boolean().default(false) }))
       .optional(),
+    // Short label for the pack picker, where full product names do not fit.
+    packLabel: z.string().optional(),
     // Mix and match bundle: pick `choose` stickers from `from` (product slugs).
     // The card renders a picker instead of a single sticker.
     pack: z

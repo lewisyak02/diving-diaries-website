@@ -11,7 +11,7 @@ interface Props {
   alt: string;
   poster?: string;          // static image shown until the canvas is live
   material?: 'holo' | 'matte' | 'decal';
-  dieCut?: 'circle' | 'none';
+  dieCut?: 'circle' | 'none' | 'contour';
   /** Decal only: the drop shadow finish. */
   dropShadow?: boolean;
   intensity?: number;
@@ -292,6 +292,10 @@ const {
   );
 
   async function init(stage: HTMLElement) {
+    // One viewer per card, however many times this module runs.
+    if (stage.dataset.holoBound) return;
+    stage.dataset.holoBound = '1';
+
     const canvas = stage.querySelector<HTMLCanvasElement>('.holo-stage__canvas');
     if (!canvas) return;
 
@@ -304,7 +308,7 @@ const {
       const viewer = await createHoloViewer(canvas, {
         src: stage.dataset.src!,
         material: stage.dataset.material as 'holo' | 'matte' | 'decal',
-        dieCut: stage.dataset.dieCut === 'circle' ? 'circle' : 'none',
+        dieCut: stage.dataset.dieCut as 'circle' | 'none' | 'contour',
         dropShadow: stage.dataset.dropShadow === '1',
         intensity: Number(stage.dataset.intensity ?? 0.9),
         hueScale: Number(stage.dataset.hueScale ?? 1),
