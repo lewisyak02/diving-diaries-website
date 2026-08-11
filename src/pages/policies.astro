@@ -1,0 +1,88 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SITE } from '../lib/site';
+export const prerender = true;
+
+const updated = 'August 2026';
+---
+
+<Layout
+  title="Shipping, returns and terms"
+  description="Shipping, returns and terms for Diving Diaries sticker orders."
+>
+  <section class="relative overflow-hidden bg-ocean-900 text-white">
+    <div class="absolute inset-0 bg-gradient-to-br from-ocean-900 via-ocean-950 to-purple-900/70"></div>
+    <div class="relative mx-auto max-w-3xl px-5 pb-14 pt-32">
+      <p class="kicker text-purple-200">The small print</p>
+      <h1 class="mt-3 text-4xl sm:text-5xl">Shipping, returns and terms</h1>
+      <p class="mt-4 text-ocean-100">Last updated {updated}.</p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 py-16">
+    <div class="prose-dd space-y-10 text-slate-600 [&_p]:mt-4 [&_p]:leading-relaxed">
+      <div id="shipping">
+        <h2>Shipping</h2>
+        <p>
+          Shipping is a flat <strong>$1.50</strong> on every order, however many stickers
+          you buy. We post within Australia only at the moment.
+        </p>
+        <p>
+          Orders are packed by hand and usually go in the post within a couple of days.
+          They travel as ordinary letter mail, so allow up to a week or so for it to
+          arrive depending on where you are. Letter mail is not tracked.
+        </p>
+      </div>
+
+      <div id="returns">
+        <h2>Returns and refunds</h2>
+        <p>
+          We do not accept returns for change of mind. Stickers are a small, low cost
+          item and once they have been posted they cannot be resold.
+        </p>
+        <p>
+          If your order arrives <strong>genuinely damaged</strong>, get in touch and we
+          will sort it out. Every case is looked at individually, and depending on what
+          happened that means a replacement or a refund.
+        </p>
+        <p>
+          <strong>Tell us within 15 days</strong> of your order arriving. Email
+          <a href={`mailto:${SITE.email}`}>{SITE.email}</a>, mention the name on the
+          order, and send a photo of the damage if you can. The photo is the quickest
+          way to get it resolved.
+        </p>
+        <p>
+          None of this limits your rights under Australian Consumer Law, which applies
+          no matter what this page says.
+        </p>
+      </div>
+
+      <div id="terms">
+        <h2>Terms</h2>
+        <p>
+          Diving Diaries sells printed vinyl stickers to customers in Australia. Prices
+          are in Australian dollars and include no GST, as the business is not currently
+          registered for it.
+        </p>
+        <p>
+          Payment is handled by <strong>Stripe</strong>. We never see or store your card
+          details. Your name, email and postal address are used to process and post your
+          order, and for nothing else. We do not sell or share them.
+        </p>
+        <p>
+          Stock counts on the shop are kept by hand. In the unlikely event something sells
+          out between your order and packing it, we will contact you and refund you in
+          full.
+        </p>
+        <p>
+          The artwork and the Diving Diaries name remain ours. Buying a sticker does not
+          transfer any right to reproduce or resell the designs.
+        </p>
+        <p>
+          Questions about any of this? Email
+          <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

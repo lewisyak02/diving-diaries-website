@@ -33,7 +33,8 @@ export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use --lts
 
 `index` (video hero: hawksbill turtle loop), `about`, `watch` ("The Dive Log", all long-form
 videos), `journal/` (index + `[slug]`, 40+ posts), `pillars/[slug]` (5 pillars), `community`,
-`shop`, `contact`, `thank-you`. `/keystatic` is the CMS admin (noindex).
+`shop`, `contact`, `thank-you`, `order-confirmed` (Stripe success), `policies` (shipping,
+returns, terms). `/keystatic` is the CMS admin (noindex).
 
 **Pillars:** diary-entries, dive-site-reviews, fish-id, gear, tips. Each pillar page shows its
 tagged videos + journal posts. Long lists use `<ShowMore initial={15}>`.
@@ -106,6 +107,10 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   - Pack contents ride along in session `metadata` so an order can be packed.
   - Any markup injected by script (the cart lines) must be styled with `:global()`, since
     dynamically created nodes never get Astro's scope attribute.
+  - The **cart pill is its own glass pill beside the nav bar** and is hidden entirely until
+    the cart has something in it. Open and close use a forced reflow and a `transitionend`
+    with a timeout fallback, never `requestAnimationFrame`, which never fires in a
+    backgrounded tab and left the drawer stuck half open.
   - **`STRIPE_SECRET_KEY` is the only secret.** Copy `.env.example` to `.env` for local work and
     set the same variable in Netlify. Without it the endpoint returns a clean 503 and the shop
     still browses.
@@ -148,6 +153,10 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 - **Card backdrop** is a deliberate mid tone (`.sticker-backdrop`): white ink vanishes on a
   light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
   `bg-ocean-900`.
+- **Returns policy:** no returns for change of mind, genuine damage handled case by case,
+  **15 days** to report it. On `/policies`, linked from the footer. Lewis is **not** on the
+  Gold Coast and does not post from there: he dives there, which is why the journal and About
+  mention it. Do not put a location in shop or order copy without asking.
 - **Activate the CMS** (GitHub App + env vars) when Lewis wants browser editing.
 - **Point the domain** `divingdiaries.au` at Netlify.
 - **Instagram/TikTok live stats:** not feasible without their official APIs; maintained by hand in

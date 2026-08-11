@@ -5,14 +5,15 @@
 <button
   type="button"
   id="cart-open"
-  class="relative flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold uppercase tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+  class="cart-pill shrink-0 rounded-full border border-white/15 bg-ocean-950/45 py-2.5 pl-4 pr-4 shadow-xl backdrop-blur-xl"
   aria-label="Open cart"
+  hidden
 >
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" />
     <path d="M2 3h3l2.4 12.1a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 7H6" />
   </svg>
-  <span id="cart-count" class="cart-badge" hidden>0</span>
+  <span id="cart-count">0</span>
 </button>
 
 <div id="cart" class="cart" hidden>
@@ -41,23 +42,46 @@
 </div>
 
 <style>
-  .cart-badge {
-    position: absolute;
-    top: -0.1rem;
-    right: -0.1rem;
-    min-width: 1.15rem;
-    padding: 0 0.25rem;
-    border-radius: 999px;
-    background: var(--color-purple-500, #6e65dc);
+  /* Its own pill beside the nav bar, in the same glass style, and only there
+     once the cart has something in it. */
+  .cart-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    animation: cart-pill-in 0.34s cubic-bezier(0.22, 1.2, 0.4, 1) both;
+  }
+  .cart-pill:hover { background: rgba(1, 18, 58, 0.7); }
+  .cart-pill:active { transform: scale(0.96); }
+  .cart-pill #cart-count {
     font-family: var(--font-display);
-    font-size: 0.68rem;
-    line-height: 1.15rem;
-    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  @keyframes cart-pill-in {
+    from { opacity: 0; transform: scale(0.7) translateX(0.6rem); }
+    to { opacity: 1; transform: none; }
+  }
+  /* A quick nudge whenever the count changes, so adding something registers. */
+  .cart-pill.is-bumped { animation: cart-bump 0.42s ease; }
+  @keyframes cart-bump {
+    0%, 100% { transform: none; }
+    35% { transform: scale(1.14); }
+    70% { transform: scale(0.97); }
   }
 
   .cart { position: fixed; inset: 0; z-index: 60; }
-  .cart__scrim { position: absolute; inset: 0; background: rgba(1, 18, 58, 0.55); backdrop-filter: blur(2px); }
+  .cart__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(1, 18, 58, 0.55);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
   .cart__panel {
     position: absolute;
     inset: 0 0 0 auto;
@@ -66,6 +90,16 @@
     flex-direction: column;
     background: #fff;
     box-shadow: -20px 0 60px rgba(1, 18, 58, 0.25);
+    transform: translateX(100%);
+    /* Decelerating ease, so it arrives rather than stops. */
+    transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cart.is-open .cart__scrim { opacity: 1; }
+  .cart.is-open .cart__panel { transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cart-pill { animation: none; }
+    .cart__scrim, .cart__panel { transition: none; }
   }
   .cart__head {
     display: flex;
@@ -136,13 +170,43 @@
   const checkoutBtn = document.getElementById('cart-checkout') as HTMLButtonElement;
   const SHIPPING = 1.5;
 
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const open = () => {
     root.hidden = false;
+    // Force a reflow so the closed transform is committed before the open
+    // class lands, which is what gives the transition something to run from.
+    // A requestAnimationFrame would do the same until the tab is backgrounded,
+    // where it never fires and the drawer sticks half opened.
+    void root.offsetWidth;
+    root.classList.add('is-open');
     document.body.style.overflow = 'hidden';
   };
+
   const close = () => {
-    root.hidden = true;
+    if (root.hidden) return;
+    root.classList.remove('is-open');
     document.body.style.overflow = '';
+    if (reduced) {
+      root.hidden = true;
+      return;
+    }
+    // Stay in the DOM until it has finished sliding out. transitionend alone
+    // is not enough: it never fires if the tab is backgrounded mid close, and
+    // the drawer would sit there invisible but still covering the page.
+    const panel = root.querySelector('.cart__panel')!;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      panel.removeEventListener('transitionend', onEnd);
+      if (!root.classList.contains('is-open')) root.hidden = true;
+    };
+    const onEnd = (e: Event) => {
+      if (e.target === panel) finish();
+    };
+    panel.addEventListener('transitionend', onEnd);
+    setTimeout(finish, 500);
   };
 
   openBtn.addEventListener('click', open);
@@ -153,11 +217,22 @@
   // Adding something should show what just happened.
   window.addEventListener('dd-cart-open', open);
 
+  let lastCount = -1;
+
   function render() {
     const lines = readCart();
     const n = cartCount(lines);
     badge.textContent = String(n);
-    badge.hidden = n === 0;
+
+    // The whole pill comes and goes with the cart, rather than sitting there
+    // empty on every page.
+    openBtn.hidden = n === 0;
+    if (n !== lastCount && n > 0 && lastCount >= 0) {
+      openBtn.classList.remove('is-bumped');
+      void openBtn.offsetWidth; // restart the animation
+      openBtn.classList.add('is-bumped');
+    }
+    lastCount = n;
 
     if (!lines.length) {
       linesEl.innerHTML = '<p class="cart__empty">Nothing in here yet.</p>';
