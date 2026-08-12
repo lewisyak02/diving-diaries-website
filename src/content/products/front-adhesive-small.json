@@ -25,5 +25,7 @@
       "dropShadow": true
     }
   ],
-  "minOrder": 2
+  "minOrder": 2,
+  "stripePriceId": "prod_V3sCv8mNQX63Ye",
+  "stripePriceIdDropShadow": "prod_V3sC4cK5JmJGu8"
 }

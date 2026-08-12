@@ -107,7 +107,9 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   - Pack contents ride along in session `metadata` so an order can be packed.
   - **`stripePriceId` / `stripePriceIdDropShadow`** on a product make checkout charge
     Stripe's own price, so the sale lands against the real catalogue product and the
-    dashboard can report units sold. Unset falls back to an inline price, which charges
+    dashboard can report units sold. Either a `price_...` or a `prod_...` id works: a
+    product id is resolved to its default price, because the dashboard shows the product
+    id far more prominently and that is what gets copied. Unset falls back to an inline price, which charges
     correctly but spawns a one off product per order and ruins the reporting. When an ID is
     used the price is fetched and **checked against the site price before charging**: a
     mismatch or an inactive price refuses the checkout rather than surprising the customer.

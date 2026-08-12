@@ -37,8 +37,10 @@ export const POST: APIRoute = async ({ request, url }) => {
   const stripe = new Stripe(key);
   const items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   const packNotes: string[] = [];
-  // Price id -> the site price it is supposed to match, checked before charging.
-  const toVerify: { id: string; expected: number; name: string }[] = [];
+  // Stripe ids to resolve and check before charging. Accepts either a price id
+  // or a product id, since the dashboard shows the product id far more
+  // prominently and that is what people copy.
+  const toResolve: { at: number; id: string; expected: number; name: string }[] = [];
 
   for (const line of lines) {
     const qty = Math.floor(Number(line.qty));
@@ -89,10 +91,11 @@ export const POST: APIRoute = async ({ request, url }) => {
     // Prefer the real Stripe price, so the sale is recorded against the actual
     // product and the dashboard can report units sold. The inline price is the
     // fallback: it charges correctly but spawns a one off product each time.
-    const priceId = dropShadow ? d.stripePriceIdDropShadow : d.stripePriceId;
-    if (priceId) {
-      items.push({ price: priceId, quantity: qty });
-      toVerify.push({ id: priceId, expected: cents(d.price), name: d.name });
+    const stripeId = dropShadow ? d.stripePriceIdDropShadow : d.stripePriceId;
+    if (stripeId) {
+      // Filled in once the id has been resolved and the price verified.
+      toResolve.push({ at: items.length, id: stripeId, expected: cents(d.price), name: d.name });
+      items.push({ price: '', quantity: qty });
       continue;
     }
 
@@ -115,27 +118,39 @@ export const POST: APIRoute = async ({ request, url }) => {
   // failure here that would really matter.
   try {
     const seen = new Map<string, Stripe.Price>();
-    for (const v of toVerify) {
+    for (const v of toResolve) {
       let price = seen.get(v.id);
       if (!price) {
-        price = await stripe.prices.retrieve(v.id);
+        if (v.id.startsWith('prod_')) {
+          const product = await stripe.products.retrieve(v.id, { expand: ['default_price'] });
+          const dp = product.default_price;
+          if (!dp || typeof dp === 'string') {
+            console.error(`[checkout] ${v.name}: product ${v.id} has no default price`);
+            return json({ error: `${v.name} has no price set in Stripe.` }, 409);
+          }
+          price = dp;
+        } else {
+          price = await stripe.prices.retrieve(v.id);
+        }
         seen.set(v.id, price);
+      }
+
+      if (price.active === false) {
+        return json({ error: `${v.name} is not available right now.` }, 409);
       }
       if (price.unit_amount !== v.expected || price.currency !== CURRENCY) {
         console.error(
-          `[checkout] ${v.name}: site says ${v.expected} ${CURRENCY}, Stripe price ${v.id} says ${price.unit_amount} ${price.currency}`
+          `[checkout] ${v.name}: site says ${v.expected} ${CURRENCY}, Stripe says ${price.unit_amount} ${price.currency} (${v.id})`
         );
         return json(
           { error: `The price of ${v.name} has changed. Refresh and try again.` },
           409
         );
       }
-      if (price.active === false) {
-        return json({ error: `${v.name} is not available right now.` }, 409);
-      }
+      items[v.at] = { ...items[v.at], price: price.id };
     }
   } catch (err) {
-    console.error('[checkout] could not verify a Stripe price', err);
+    console.error('[checkout] could not resolve a Stripe price', err);
     return json({ error: 'Could not confirm pricing. Try again shortly.' }, 502);
   }
 
