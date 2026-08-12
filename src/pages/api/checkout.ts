@@ -34,8 +34,11 @@ export const POST: APIRoute = async ({ request, url }) => {
   const products = await getCollection('products');
   const bySlug = new Map(products.map((p) => [p.id, p]));
 
+  const stripe = new Stripe(key);
   const items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   const packNotes: string[] = [];
+  // Price id -> the site price it is supposed to match, checked before charging.
+  const toVerify: { id: string; expected: number; name: string }[] = [];
 
   for (const line of lines) {
     const qty = Math.floor(Number(line.qty));
@@ -83,6 +86,16 @@ export const POST: APIRoute = async ({ request, url }) => {
       packNotes.push([...tally].map(([k, n]) => `${k} x${n}`).join(', '));
     }
 
+    // Prefer the real Stripe price, so the sale is recorded against the actual
+    // product and the dashboard can report units sold. The inline price is the
+    // fallback: it charges correctly but spawns a one off product each time.
+    const priceId = dropShadow ? d.stripePriceIdDropShadow : d.stripePriceId;
+    if (priceId) {
+      items.push({ price: priceId, quantity: qty });
+      toVerify.push({ id: priceId, expected: cents(d.price), name: d.name });
+      continue;
+    }
+
     const finish = dropShadow ? ' (drop shadow)' : '';
     items.push({
       quantity: qty,
@@ -97,7 +110,35 @@ export const POST: APIRoute = async ({ request, url }) => {
     });
   }
 
-  const stripe = new Stripe(key);
+  // Two places now hold a price, so make sure they agree. Charging someone a
+  // different number to the one on the card they were looking at is the one
+  // failure here that would really matter.
+  try {
+    const seen = new Map<string, Stripe.Price>();
+    for (const v of toVerify) {
+      let price = seen.get(v.id);
+      if (!price) {
+        price = await stripe.prices.retrieve(v.id);
+        seen.set(v.id, price);
+      }
+      if (price.unit_amount !== v.expected || price.currency !== CURRENCY) {
+        console.error(
+          `[checkout] ${v.name}: site says ${v.expected} ${CURRENCY}, Stripe price ${v.id} says ${price.unit_amount} ${price.currency}`
+        );
+        return json(
+          { error: `The price of ${v.name} has changed. Refresh and try again.` },
+          409
+        );
+      }
+      if (price.active === false) {
+        return json({ error: `${v.name} is not available right now.` }, 409);
+      }
+    }
+  } catch (err) {
+    console.error('[checkout] could not verify a Stripe price', err);
+    return json({ error: 'Could not confirm pricing. Try again shortly.' }, 502);
+  }
+
   const origin = url.origin;
 
   try {

@@ -105,6 +105,13 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
     re-read from the content collection and re-validated, so a tampered cart cannot buy a $5
     sticker for a cent. Shipping ($1.50, AU only) is added server side.
   - Pack contents ride along in session `metadata` so an order can be packed.
+  - **`stripePriceId` / `stripePriceIdDropShadow`** on a product make checkout charge
+    Stripe's own price, so the sale lands against the real catalogue product and the
+    dashboard can report units sold. Unset falls back to an inline price, which charges
+    correctly but spawns a one off product per order and ruins the reporting. When an ID is
+    used the price is fetched and **checked against the site price before charging**: a
+    mismatch or an inactive price refuses the checkout rather than surprising the customer.
+    Price IDs are not secrets.
   - Any markup injected by script (the cart lines) must be styled with `:global()`, since
     dynamically created nodes never get Astro's scope attribute.
   - The **cart pill is its own glass pill beside the nav bar** and is hidden entirely until

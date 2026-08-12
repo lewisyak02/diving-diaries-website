@@ -37,6 +37,14 @@ const products = defineCollection({
     stock: z.number().int().min(0).optional(),
     // Smallest quantity that can be ordered. Enforced at Stripe, stated here.
     minOrder: z.number().int().min(1).optional(),
+    // Stripe Price IDs (price_...). With these set, checkout charges Stripe's
+    // own price and the sale lands against the real product, so the dashboard
+    // can report units sold. Without them it falls back to an inline price,
+    // which works but creates a throwaway product per order.
+    // These are not secrets. `dropShadow` is the second finish, where a product
+    // has one.
+    stripePriceId: z.string().optional(),
+    stripePriceIdDropShadow: z.string().optional(),
     image: z.string().optional(),
     // Source artwork the sticker viewer renders. Falls back to `image`.
     artwork: z.string().optional(),
