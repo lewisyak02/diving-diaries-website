@@ -85,7 +85,7 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
 ## Open items / TODO
 
 - **Prices (Aug 2026):** every sticker $5, Front Adhesive Small $2.50 with a **minimum order
-  of 3** (`minOrder`, mix the finishes freely). Sticker Pack is **$15 for any 5**, shown against
+  of 2** (`minOrder`, mix the finishes freely). Sticker Pack is **$15 for any 5**, shown against
   a struck through `compareAt` of $25. Shipping is a flat **$1.50 Australia wide**, stated once
   under the grid. The pack price only works because everything in it is $5: the small adhesive
   was removed from `pack.from` for exactly that reason, so **do not add a differently priced
