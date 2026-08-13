@@ -13,5 +13,6 @@
   "order": 5,
   "spin": "/products/fiddler-ray/fiddler-ray--spin.json",
   "packLabel": "Fiddler Ray",
-  "stock": 0
+  "stock": 0,
+  "stripePriceId": "prod_V3yWmBFmKR4kse"
 }

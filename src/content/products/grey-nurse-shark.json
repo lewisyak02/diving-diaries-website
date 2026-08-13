@@ -13,5 +13,6 @@
   "order": 7,
   "spin": "/products/grey-nurse-shark/grey-nurse-shark--spin.json",
   "packLabel": "Grey Nurse",
-  "stock": 0
+  "stock": 0,
+  "stripePriceId": "prod_V3yYR1k6otujQh"
 }

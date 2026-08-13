@@ -13,5 +13,6 @@
   "order": 6,
   "spin": "/products/starfish-cuddles/starfish-cuddles--spin.json",
   "packLabel": "Starfish",
-  "stock": 0
+  "stock": 0,
+  "stripePriceId": "prod_V3yX12ewR2Tnah"
 }
