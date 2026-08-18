@@ -7,12 +7,13 @@
   "material": "matte",
   "altText": "A die cut sticker of a fiddler ray, blue banded and half buried in sand. Drag it to tilt it.",
   "description": "Also called a banjo shark. It is a ray, but it swims like a shark, driving with its tail instead of flapping its wings the way most rays do.",
+  "size": "85 x 85mm",
+  "finish": "Die cut matte",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 5,
   "spin": "/products/fiddler-ray/fiddler-ray--spin.json",
   "packLabel": "Fiddler Ray",
-  "stock": 0,
   "stripePriceId": "prod_V3yWmBFmKR4kse"
 }

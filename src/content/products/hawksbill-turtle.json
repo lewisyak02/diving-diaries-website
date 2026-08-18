@@ -7,12 +7,13 @@
   "material": "matte",
   "altText": "A die cut sticker of a hawksbill turtle mid swim, patterned shell and flippers out. Drag it to tilt it.",
   "description": "Hawksbills are critically endangered, and watching one work its way along a reef never gets old.",
+  "size": "85 x 85mm",
+  "finish": "Die cut matte",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 8,
   "spin": "/products/hawksbill-turtle/hawksbill-turtle--spin.json",
   "packLabel": "Hawksbill",
-  "stock": 0,
   "stripePriceId": "prod_V3yaB1v8zbXoYN"
 }

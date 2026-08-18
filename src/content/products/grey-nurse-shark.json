@@ -7,12 +7,13 @@
   "material": "matte",
   "altText": "A die cut sticker of a grey nurse shark in profile, speckled and ragged toothed. Drag it to tilt it.",
   "description": "All teeth and no threat. Grey nurse sharks are critically endangered on Australia's east coast, which makes every encounter with one worth remembering.",
+  "size": "85 x 85mm",
+  "finish": "Die cut matte",
   "holographic": false,
   "buyUrl": "",
   "soldOut": false,
   "order": 7,
   "spin": "/products/grey-nurse-shark/grey-nurse-shark--spin.json",
   "packLabel": "Grey Nurse",
-  "stock": 0,
   "stripePriceId": "prod_V3yYR1k6otujQh"
 }
