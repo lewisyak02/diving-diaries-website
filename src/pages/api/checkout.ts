@@ -85,7 +85,16 @@ export const POST: APIRoute = async ({ request, url }) => {
           return json({ error: `Not enough ${bySlug.get(base)!.data.name} left.` }, 409);
         }
       }
-      packNotes.push([...tally].map(([k, n]) => `${k} x${n}`).join(', '));
+      packNotes.push(
+        [...tally]
+          .map(([k, n]) => {
+            const isDs = k.endsWith('-drop-shadow');
+            const base = isDs ? k.slice(0, -'-drop-shadow'.length) : k;
+            const label = bySlug.get(base)?.data.name ?? base;
+            return `${label}${isDs ? ' (drop shadow)' : ''} x${n}`;
+          })
+          .join(', ')
+      );
     }
 
     // Prefer the real Stripe price, so the sale is recorded against the actual
@@ -171,7 +180,20 @@ export const POST: APIRoute = async ({ request, url }) => {
         },
       ],
       // The pack contents are the only thing not obvious from the line items.
-      ...(packNotes.length ? { metadata: { packs: packNotes.join(' | ').slice(0, 500) } } : {}),
+      // This has to ride on the PaymentIntent, not just the session: the
+      // dashboard's Payments page reads the PaymentIntent, and Stripe does not
+      // copy session metadata across, so a session-only note cannot be seen
+      // where the order actually gets packed. Kept on the session too, since
+      // that is what the success URL can look up.
+      ...(packNotes.length
+        ? {
+            metadata: { packs: packNotes.join(' | ').slice(0, 500) },
+            payment_intent_data: {
+              metadata: { packs: packNotes.join(' | ').slice(0, 500) },
+              description: `Sticker pack: ${packNotes.join(' | ')}`.slice(0, 1000),
+            },
+          }
+        : {}),
       success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
     });
