@@ -192,6 +192,13 @@ const { choose, options, class: klass = '' } = Astro.props;
     const picked = new Map<string, number>();
     const total = () => [...picked.values()].reduce((a, b) => a + b, 0);
 
+    // If the range cannot add up to a full pack, say so rather than leaving
+    // someone tapping at greyed out tiles.
+    const available = tiles.reduce(
+      (sum, t) => sum + (t.dataset.stock === undefined ? Infinity : Number(t.dataset.stock)),
+      0
+    );
+
     function render() {
       const n = total();
       const full = n === choose;
@@ -215,13 +222,7 @@ const { choose, options, class: klass = '' } = Astro.props;
       status.textContent = full
         ? `${choose} of ${choose} chosen`
         : `${n} of ${choose} chosen`;
-      if (n === 0) status.textContent = `Pick any ${choose}`;
-      // If the range cannot add up to a full pack, say so rather than leaving
-      // someone tapping at greyed out tiles.
-      const available = tiles.reduce(
-        (sum, t) => sum + (t.dataset.stock === undefined ? Infinity : Number(t.dataset.stock)),
-        0
-      );
+      if (n === 0) status.textContent = `Tap ${choose} stickers to build your pack`;
       if (available < choose) status.textContent = 'Not enough in stock';
       bar.toggleAttribute('data-full', full);
       reset.hidden = n === 0;
@@ -241,6 +242,18 @@ const { choose, options, class: klass = '' } = Astro.props;
         buy.toggleAttribute('data-pack-locked', !full);
         buy.setAttribute('aria-disabled', String(!full));
         if (buy instanceof HTMLButtonElement) buy.disabled = !full;
+        // People were reading the greyed out button as sold out and leaving,
+        // so it now carries the instruction itself rather than relying on the
+        // status line above it being noticed.
+        const left = choose - n;
+        buy.textContent =
+          available < choose
+            ? 'Sold out'
+            : full
+              ? 'Add this pack'
+              : n === 0
+                ? `Pick ${choose} stickers`
+                : `Pick ${left} more sticker${left === 1 ? '' : 's'}`;
         if (baseHref) {
           // Carry the choice through to Stripe, where it lands on the payment
           // as the client reference so the order can actually be packed.
