@@ -1,0 +1,15 @@
+{
+  "name": "Zebra Shark",
+  "price": "5",
+  "comingSoon": true,
+  "artwork": "/stickers/marine-life/zebra-shark.webp",
+  "dieCut": "contour",
+  "material": "matte",
+  "altText": "A die cut sticker of a zebra shark, sandy tan with dark spots and a long trailing tail. Drag it to tilt it.",
+  "description": "Born striped and grown into spots, which is how a leopard patterned shark ended up called a zebra. Also the only one I liked enough to get tattooed.",
+  "holographic": false,
+  "buyUrl": "",
+  "soldOut": false,
+  "order": 9,
+  "packLabel": "Zebra Shark"
+}

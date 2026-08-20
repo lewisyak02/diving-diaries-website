@@ -53,6 +53,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 
     const d = product.data;
     if (!d.price) return json({ error: `${d.name} has no price yet.` }, 409);
+    if (d.comingSoon) return json({ error: `${d.name} is not on sale yet.` }, 409);
     if (d.soldOut || d.stock === 0) return json({ error: `${d.name} is sold out.` }, 409);
 
     // The count is a manual one, but it still decides what can be ordered.

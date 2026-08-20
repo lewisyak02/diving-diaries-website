@@ -56,7 +56,7 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
       products.length > 0 ? (
         <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => {
-            const { name, price, compareAt, stock, minOrder, image, artwork, dieCut, material, dropShadow, spin, altText, description, size, finish, finishes, pack, holographic, buyUrl, soldOut } = p.data;
+            const { name, price, compareAt, stock, minOrder, comingSoon, image, artwork, dieCut, material, dropShadow, spin, altText, description, size, finish, finishes, pack, holographic, buyUrl, soldOut } = p.data;
             // A counted product with nothing left is sold out, whatever the flag says.
             const out = soldOut || stock === 0;
             const canBuy = buyUrl && !out;
@@ -115,9 +115,11 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
                       </div>
                     </div>
                   )}
-                  {(minOrder || out || lowStock) && (
+                  {(minOrder || out || lowStock || comingSoon) && (
                     <p class="mt-2 text-xs font-semibold uppercase tracking-wide">
-                      {out ? (
+                      {comingSoon ? (
+                        <span class="text-purple-600">Not printed yet</span>
+                      ) : out ? (
                         <span class="text-slate-400">Out of stock</span>
                       ) : lowStock ? (
                         <span class="text-purple-600">Only {stock} left</span>
@@ -129,7 +131,9 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
                   )}
                   {description && <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-600">{description}</p>}
                   <div class="mt-5">
-                    {price && !out ? (
+                    {comingSoon ? (
+                      <span class="block rounded-full bg-ocean-50 py-3 text-center text-sm font-bold uppercase tracking-wide text-ocean-400">Coming soon</span>
+                    ) : price && !out ? (
                       <button
                         type="button"
                         data-add-to-cart

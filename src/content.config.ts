@@ -37,6 +37,9 @@ const products = defineCollection({
     stock: z.number().int().min(0).optional(),
     // Smallest quantity that can be ordered. Enforced at Stripe, stated here.
     minOrder: z.number().int().min(1).optional(),
+    // Shown but not yet buyable. Distinct from soldOut and from stock 0: this
+    // one has never been printed, rather than having run out.
+    comingSoon: z.boolean().default(false),
     // Stripe Price IDs (price_...). With these set, checkout charges Stripe's
     // own price and the sale lands against the real product, so the dashboard
     // can report units sold. Without them it falls back to an inline price,
