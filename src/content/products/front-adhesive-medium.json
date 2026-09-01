@@ -1,6 +1,8 @@
 {
   "name": "Front Adhesive Medium",
   "price": "5",
+  "stock": 50,
+  "stockDropShadow": 42,
   "image": "/products/front-adhesive-medium/front-adhesive-medium--poster.webp",
   "artwork": "/stickers/dd-wordmark-white.png",
   "material": "decal",

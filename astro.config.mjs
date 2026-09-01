@@ -16,7 +16,14 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  integrations: [markdoc(), react(), keystatic(), sitemap()],
+  integrations: [
+    markdoc(),
+    react(),
+    keystatic(),
+    // /stock is Lewis's private counter, so keep it out of the sitemap. It is
+    // noindex too, but there is no reason to advertise it.
+    sitemap({ filter: (page) => !page.includes('/stock') })
+  ],
   // imageCDN:false → optimise images with Astro's built-in Sharp pipeline at
   // build time, so they render identically in local dev and in production
   // (Netlify's Image CDN only works once deployed).

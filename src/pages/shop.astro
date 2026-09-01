@@ -27,8 +27,8 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
         name: finish ? `${p!.data.name}, ${finish.toLowerCase()}` : p!.data.name,
         label: finish ? `${base} ${finish}` : base,
         thumb: e.dropShadow ? poster.replace(/--poster\.webp$/, '--poster-drop-shadow.webp') : poster,
-        // Both finishes come out of the same drawer.
-        stock: p!.data.stock,
+        // A finish is its own sheet in the drawer, with its own count.
+        stock: e.dropShadow ? p!.data.stockDropShadow : p!.data.stock,
       };
     });
 ---
@@ -56,11 +56,26 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
       products.length > 0 ? (
         <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => {
-            const { name, price, compareAt, stock, minOrder, comingSoon, image, artwork, dieCut, material, dropShadow, spin, altText, description, size, finish, finishes, pack, holographic, buyUrl, soldOut } = p.data;
+            const { name, price, compareAt, stock, stockDropShadow, minOrder, comingSoon, image, artwork, dieCut, material, dropShadow, spin, altText, description, size, finish, finishes, pack, holographic, buyUrl, soldOut } = p.data;
+            // Two finishes are two different sheets, counted separately, so the
+            // card has to talk about whichever one is showing. These numbers are
+            // a snapshot from the last build; the live counter is checked at
+            // checkout (see src/lib/stock.ts).
+            const twoFinishes = (finishes?.length ?? 0) > 1;
+            const stockDs = twoFinishes ? stockDropShadow : undefined;
             // A counted product with nothing left is sold out, whatever the flag says.
-            const out = soldOut || stock === 0;
+            const outFor = (n?: number) => soldOut || n === 0;
+            // Only the whole card goes sold out; one empty finish just disables
+            // that button.
+            const out = twoFinishes ? outFor(stock) && outFor(stockDs) : outFor(stock);
             const canBuy = buyUrl && !out;
-            const lowStock = stock !== undefined && stock > 0 && stock <= 5;
+            const noteFor = (n?: number) =>
+              outFor(n) ? 'Out of stock' : n !== undefined && n <= 5 ? `Only ${n} left` : '';
+            const note = noteFor(stock);
+            // The line has to exist in the markup even when the finish showing
+            // first has plenty left, or switching to the empty one would say
+            // nothing at all.
+            const noteDs = twoFinishes ? noteFor(stockDs) : '';
             const texture = artwork ?? image;
             const surface = material ?? (holographic ? 'holo' : 'matte');
             return (
@@ -115,17 +130,25 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
                       </div>
                     </div>
                   )}
-                  {(minOrder || out || lowStock || comingSoon) && (
+                  {(minOrder || note || noteDs || comingSoon) && (
                     <p class="mt-2 text-xs font-semibold uppercase tracking-wide">
                       {comingSoon ? (
                         <span class="text-purple-600">Not printed yet</span>
-                      ) : out ? (
-                        <span class="text-slate-400">Out of stock</span>
-                      ) : lowStock ? (
-                        <span class="text-purple-600">Only {stock} left</span>
-                      ) : null}
+                      ) : (
+                        /* Rewritten by the finish buttons, since each finish has
+                           its own count. */
+                        <span
+                          data-stock-note
+                          data-note-white={noteFor(stock)}
+                          data-note-ds={twoFinishes ? noteDs : undefined}
+                          class:list={[note === 'Out of stock' ? 'text-slate-400' : 'text-purple-600']}
+                          hidden={!note}
+                        >
+                          {note}
+                        </span>
+                      )}
                       {minOrder && !out && (
-                        <span class="text-slate-400">{lowStock ? ' · ' : ''}Minimum order {minOrder}</span>
+                        <span data-min-note class="text-slate-400">{note ? ' · ' : ''}Minimum order {minOrder}</span>
                       )}
                     </p>
                   )}
@@ -142,6 +165,8 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
                         data-price={price}
                         data-thumb={image}
                         data-stock={stock === undefined ? undefined : String(stock)}
+                        data-stock-ds={stockDs === undefined ? undefined : String(stockDs)}
+                        aria-disabled={outFor(stock) && !pack ? 'true' : undefined}
                         data-min={minOrder ? String(minOrder) : undefined}
                         data-pack-buy={pack ? '' : undefined}
                         class:list={[
@@ -192,11 +217,17 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
   document.querySelectorAll<HTMLButtonElement>('[data-add-to-cart]').forEach((btn) => {
     if (btn.dataset.cartBound) return;
     btn.dataset.cartBound = '1';
+    // Kept so the label can come back after a finish that is out of stock.
+    btn.dataset.label = btn.textContent!.trim();
     const card = btn.closest('article')!;
     const picker = card.querySelector<HTMLElement>('[data-pack-picker]');
 
     btn.addEventListener('click', () => {
-      const stock = btn.dataset.stock === undefined ? undefined : Number(btn.dataset.stock);
+      if (btn.getAttribute('aria-disabled') === 'true' && !picker) return;
+      // Each finish is counted separately, so the cap follows the choice.
+      const ds = card.querySelector<HTMLButtonElement>('[data-finish][aria-pressed="true"]')?.dataset.dropShadow === '1';
+      const raw = ds ? btn.dataset.stockDs : btn.dataset.stock;
+      const stock = raw === undefined ? undefined : Number(raw);
       const min = btn.dataset.min ? Number(btn.dataset.min) : 1;
       const price = parseFloat(btn.dataset.price!);
       let id = btn.dataset.slug!;
@@ -210,13 +241,10 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
         const chosen = (picker.dataset.packChosen ?? '').split(',').filter(Boolean);
         pack = chosen;
         packLabels = (picker.dataset.packChosenLabels ?? '').split('|').filter(Boolean);
-      } else {
-        const pressed = card.querySelector<HTMLButtonElement>('[data-finish][aria-pressed="true"]');
-        if (pressed?.dataset.dropShadow === '1') {
-          id += ':ds';
-          name += ' (drop shadow)';
-          thumb = thumb?.replace(/--poster\.webp$/, '--poster-drop-shadow.webp');
-        }
+      } else if (ds) {
+        id += ':ds';
+        name += ' (drop shadow)';
+        thumb = thumb?.replace(/--poster\.webp$/, '--poster-drop-shadow.webp');
       }
 
       addToCart({ id, qty: min, name, price, thumb, pack, packLabels }, stock);
@@ -232,12 +260,15 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
     if (!buttons.length || card.dataset.finishBound) return;
     card.dataset.finishBound = '1';
     const stage = card.querySelector<HTMLElement>('[data-holo]');
+    // Whichever finish is showing on load decides what the card says.
+    showStock(card, buttons[0].dataset.dropShadow === '1');
 
     buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
         // The finish decides what actually gets ordered, so the choice is
         // always recorded. Only the redraw depends on a live viewer.
         buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        showStock(card, btn.dataset.dropShadow === '1');
         if (!stage?.dataset.canSwitch) return;
         stage.dispatchEvent(
           new CustomEvent('holo:finish', {
@@ -247,4 +278,30 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
       });
     });
   });
+
+  /**
+   * White and drop shadow are different sheets with different counts, so the
+   * "Only N left" line and the buy button follow whichever finish is showing.
+   * These numbers are the ones the site was built with; the live counter has
+   * the last word at checkout.
+   */
+  function showStock(card: HTMLElement, dropShadow: boolean) {
+    const note = card.querySelector<HTMLElement>('[data-stock-note]');
+    const min = card.querySelector<HTMLElement>('[data-min-note]');
+    const btn = card.querySelector<HTMLButtonElement>('[data-add-to-cart]');
+    const text = (dropShadow ? note?.dataset.noteDs : note?.dataset.noteWhite) ?? '';
+
+    if (note) {
+      note.textContent = text;
+      note.hidden = !text;
+      note.className = text === 'Out of stock' ? 'text-slate-400' : 'text-purple-600';
+    }
+    if (min) min.textContent = `${text ? ' · ' : ''}${min.textContent!.replace(/^ · /, '')}`;
+    if (btn) {
+      const outHere = text === 'Out of stock';
+      if (outHere) btn.setAttribute('aria-disabled', 'true');
+      else btn.removeAttribute('aria-disabled');
+      btn.textContent = outHere ? 'Sold out' : btn.dataset.label!;
+    }
+  }
 </script>

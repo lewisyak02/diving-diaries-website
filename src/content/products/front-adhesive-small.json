@@ -1,6 +1,8 @@
 {
   "name": "Front Adhesive Small",
   "price": "2.50",
+  "stock": 214,
+  "stockDropShadow": 225,
   "image": "/products/front-adhesive-small/front-adhesive-small--poster.webp",
   "artwork": "/stickers/dd-wordmark-white.png",
   "material": "decal",

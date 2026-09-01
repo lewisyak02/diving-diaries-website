@@ -1,0 +1,156 @@
+---
+// The stock counter, for Lewis only. Not linked from anywhere, noindex, and
+// out of the sitemap. Everything is fetched at run time from /api/stock with
+// the password, so the numbers are never baked into the page and this stays
+// safe to deploy as a static file.
+import Layout from '../layouts/Layout.astro';
+import { listVariants } from '../lib/stock';
+
+// Only the names and keys are built in. The counts are not.
+const variants = (await listVariants()).map((v) => ({ key: v.key, name: v.name }));
+---
+
+<Layout title="Stock" noindex bare>
+  <div class="mx-auto max-w-2xl px-5 py-16">
+    <h1 class="text-3xl">Stock</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      What is left in the drawer. Orders take from this automatically, packs included.
+      Type a new number and save when you print more or find a stray.
+    </p>
+
+    <form data-unlock class="mt-8 flex gap-2">
+      <input
+        type="password"
+        name="token"
+        autocomplete="current-password"
+        placeholder="Password"
+        class="w-full rounded-full border border-ocean-200 px-4 py-2 text-sm"
+      />
+      <button
+        type="submit"
+        class="shrink-0 rounded-full bg-purple-500 px-5 py-2 text-sm font-bold uppercase tracking-wide text-white hover:bg-purple-600"
+        >Open</button
+      >
+    </form>
+
+    <p data-message class="mt-4 text-sm font-semibold text-purple-600" hidden></p>
+
+    <form data-counter hidden class="mt-8">
+      <ul class="divide-y divide-ocean-100 border-y border-ocean-100">
+        {
+          variants.map((v) => (
+            <li class="flex items-center justify-between gap-4 py-3">
+              <span class="text-sm font-semibold text-slate-700">{v.name}</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                name={v.key}
+                class="w-24 rounded-lg border border-ocean-200 px-3 py-1.5 text-right text-sm tabular-nums"
+              />
+            </li>
+          ))
+        }
+      </ul>
+      <p class="mt-4 flex items-center justify-between text-sm text-slate-500">
+        <span data-total></span>
+        <button
+          type="submit"
+          class="rounded-full bg-purple-500 px-5 py-2 text-sm font-bold uppercase tracking-wide text-white hover:bg-purple-600 disabled:bg-slate-200 disabled:text-slate-400"
+          >Save</button
+        >
+      </p>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  const unlock = document.querySelector<HTMLFormElement>('[data-unlock]')!;
+  const counter = document.querySelector<HTMLFormElement>('[data-counter]')!;
+  const message = document.querySelector<HTMLParagraphElement>('[data-message]')!;
+  const total = document.querySelector<HTMLElement>('[data-total]')!;
+
+  // Kept for the tab only. Closing it asks for the password again.
+  const KEY = 'dd-stock-token';
+  let token = sessionStorage.getItem(KEY) ?? '';
+
+  const say = (text: string, bad = false) => {
+    message.textContent = text;
+    message.hidden = !text;
+    message.className = `mt-4 text-sm font-semibold ${bad ? 'text-red-600' : 'text-purple-600'}`;
+  };
+
+  type Report = {
+    live: boolean;
+    total: number;
+    variants: { key: string; name: string; count: number | null; seed: number | null }[];
+  };
+
+  function paint(report: Report) {
+    for (const v of report.variants) {
+      const field = counter.querySelector<HTMLInputElement>(`[name="${CSS.escape(v.key)}"]`);
+      if (field) field.value = v.count === null ? '' : String(v.count);
+    }
+    total.textContent = `${report.total} stickers in total`;
+    unlock.hidden = true;
+    counter.hidden = false;
+    say(
+      report.live
+        ? ''
+        : 'Not connected to the live counter, so these are the starting numbers and saving will not work. This page only works on the deployed site.',
+      !report.live
+    );
+  }
+
+  async function load() {
+    if (!token) return;
+    const res = await fetch('/api/stock', { headers: { 'x-stock-token': token } });
+    const body = await res.json();
+    if (!res.ok) {
+      sessionStorage.removeItem(KEY);
+      token = '';
+      say(body.error ?? 'Could not open the counter.', true);
+      return;
+    }
+    paint(body);
+  }
+
+  unlock.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    token = new FormData(unlock).get('token') as string;
+    sessionStorage.setItem(KEY, token);
+    say('');
+    await load();
+  });
+
+  counter.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const button = counter.querySelector('button')!;
+    const counts: Record<string, number> = {};
+    for (const field of counter.querySelectorAll<HTMLInputElement>('input[type="number"]')) {
+      if (field.value !== '') counts[field.name] = Number(field.value);
+    }
+
+    button.disabled = true;
+    say('Saving');
+    try {
+      const res = await fetch('/api/stock', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-stock-token': token },
+        body: JSON.stringify({ counts }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        say(body.error ?? 'Could not save.', true);
+        return;
+      }
+      paint(body);
+      say('Saved');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  load();
+</script>

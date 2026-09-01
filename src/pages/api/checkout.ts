@@ -1,6 +1,13 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import Stripe from 'stripe';
+import {
+  readCounts,
+  variantKey,
+  packKeyToVariant,
+  encodeTally,
+  type Counts,
+} from '../../lib/stock';
 
 export const prerender = false;
 
@@ -34,6 +41,10 @@ export const POST: APIRoute = async ({ request, url }) => {
   const products = await getCollection('products');
   const bySlug = new Map(products.map((p) => [p.id, p]));
 
+  // The live counter, not the numbers baked into the page. Cards are a snapshot
+  // from the last build; this is what is actually left in the drawer.
+  const { counts } = await readCounts();
+
   const stripe = new Stripe(key);
   const items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   const packNotes: string[] = [];
@@ -41,6 +52,15 @@ export const POST: APIRoute = async ({ request, url }) => {
   // or a product id, since the dashboard shows the product id far more
   // prominently and that is what people copy.
   const toResolve: { at: number; id: string; expected: number; name: string }[] = [];
+  // Every physical sticker this order would take out of the drawer. Singles and
+  // pack contents land in the same tally, because they come from the same
+  // drawer: three fiddler rays loose plus two inside a pack is five fiddler
+  // rays. Checked once at the end, and sent to Stripe so the webhook can
+  // subtract exactly what was sold.
+  const tally: Counts = {};
+  const take = (vkey: string, qty: number) => {
+    tally[vkey] = (tally[vkey] ?? 0) + qty;
+  };
 
   for (const line of lines) {
     const qty = Math.floor(Number(line.qty));
@@ -54,12 +74,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     const d = product.data;
     if (!d.price) return json({ error: `${d.name} has no price yet.` }, 409);
     if (d.comingSoon) return json({ error: `${d.name} is not on sale yet.` }, 409);
-    if (d.soldOut || d.stock === 0) return json({ error: `${d.name} is sold out.` }, 409);
-
-    // The count is a manual one, but it still decides what can be ordered.
-    if (d.stock !== undefined && qty > d.stock) {
-      return json({ error: `Only ${d.stock} of ${d.name} left.` }, 409);
-    }
+    if (d.soldOut) return json({ error: `${d.name} is sold out.` }, 409);
     if (d.minOrder && qty < d.minOrder) {
       return json({ error: `${d.name} has a minimum order of ${d.minOrder}.` }, 409);
     }
@@ -73,29 +88,18 @@ export const POST: APIRoute = async ({ request, url }) => {
       const allowed = new Set(
         d.pack.from.map((e) => (e.dropShadow ? `${e.product}-drop-shadow` : e.product))
       );
-      const tally = new Map<string, number>();
+      const inPack = new Map<string, number>();
       for (const k of picked) {
         if (!allowed.has(k)) return json({ error: 'That sticker is not in the pack range.' }, 400);
-        tally.set(k, (tally.get(k) ?? 0) + 1);
+        inPack.set(k, (inPack.get(k) ?? 0) + 1);
       }
-      // A pack draws from the same drawer as the singles.
-      for (const [k, n] of tally) {
-        const base = k.endsWith('-drop-shadow') ? k.slice(0, -'-drop-shadow'.length) : k;
-        const stock = bySlug.get(base)?.data.stock;
-        if (stock !== undefined && n > stock) {
-          return json({ error: `Not enough ${bySlug.get(base)!.data.name} left.` }, 409);
-        }
+      for (const [k, n] of inPack) {
+        // A packed sticker is a sold sticker. It counts.
+        take(packKeyToVariant(k), n);
       }
-      packNotes.push(
-        [...tally]
-          .map(([k, n]) => {
-            const isDs = k.endsWith('-drop-shadow');
-            const base = isDs ? k.slice(0, -'-drop-shadow'.length) : k;
-            const label = bySlug.get(base)?.data.name ?? base;
-            return `${label}${isDs ? ' (drop shadow)' : ''} x${n}`;
-          })
-          .join(', ')
-      );
+      packNotes.push([...inPack].map(([k, n]) => `${variantName(k, bySlug)} x${n}`).join(', '));
+    } else {
+      take(variantKey(slug, dropShadow), qty);
     }
 
     // Prefer the real Stripe price, so the sale is recorded against the actual
@@ -121,6 +125,17 @@ export const POST: APIRoute = async ({ request, url }) => {
         },
       },
     });
+  }
+
+  // One stock check for the whole order, now that everything the cart would
+  // take has been added up. An untracked variant is not in `counts` and sells
+  // freely, which is how a sticker with no count set behaves today.
+  for (const [vkey, qty] of Object.entries(tally)) {
+    const left = counts[vkey];
+    if (left === undefined) continue;
+    const name = variantName(vkey, bySlug);
+    if (left === 0) return json({ error: `${name} is sold out.` }, 409);
+    if (qty > left) return json({ error: `Only ${left} of ${name} left.` }, 409);
   }
 
   // Two places now hold a price, so make sure they agree. Charging someone a
@@ -166,6 +181,18 @@ export const POST: APIRoute = async ({ request, url }) => {
 
   const origin = url.origin;
 
+  // The pack contents are the only thing not obvious from the line items.
+  // This has to ride on the PaymentIntent, not just the session: the
+  // dashboard's Payments page reads the PaymentIntent, and Stripe does not
+  // copy session metadata across, so a session-only note cannot be seen
+  // where the order actually gets packed. Kept on the session too, since
+  // that is what the success URL can look up.
+  const packs = packNotes.join(' | ').slice(0, 500);
+  // `stock` is the machine readable version of the same order: what to take
+  // off the counter once the payment lands. The webhook reads it off the
+  // session, so it never has to work out what was in a pack.
+  const stock = encodeTally(tally).slice(0, 500);
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -180,21 +207,11 @@ export const POST: APIRoute = async ({ request, url }) => {
           },
         },
       ],
-      // The pack contents are the only thing not obvious from the line items.
-      // This has to ride on the PaymentIntent, not just the session: the
-      // dashboard's Payments page reads the PaymentIntent, and Stripe does not
-      // copy session metadata across, so a session-only note cannot be seen
-      // where the order actually gets packed. Kept on the session too, since
-      // that is what the success URL can look up.
-      ...(packNotes.length
-        ? {
-            metadata: { packs: packNotes.join(' | ').slice(0, 500) },
-            payment_intent_data: {
-              metadata: { packs: packNotes.join(' | ').slice(0, 500) },
-              description: `Sticker pack: ${packNotes.join(' | ')}`.slice(0, 1000),
-            },
-          }
-        : {}),
+      metadata: { stock, ...(packs ? { packs } : {}) },
+      payment_intent_data: {
+        metadata: { stock, ...(packs ? { packs } : {}) },
+        ...(packs ? { description: `Sticker pack: ${packs}`.slice(0, 1000) } : {}),
+      },
       success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
     });
@@ -205,6 +222,18 @@ export const POST: APIRoute = async ({ request, url }) => {
     return json({ error: 'Stripe could not start the checkout. Try again shortly.' }, 502);
   }
 };
+
+/** Reads a variant or pack key back into something a person can act on. */
+function variantName(key: string, bySlug: Map<string, { data: { name: string } }>) {
+  const isDs = key.endsWith(':ds') || key.endsWith('-drop-shadow');
+  const slug = key.endsWith(':ds')
+    ? key.slice(0, -3)
+    : key.endsWith('-drop-shadow')
+      ? key.slice(0, -'-drop-shadow'.length)
+      : key;
+  const name = bySlug.get(slug)?.data.name ?? slug;
+  return `${name}${isDs ? ' (drop shadow)' : ''}`;
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

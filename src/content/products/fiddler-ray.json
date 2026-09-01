@@ -1,6 +1,7 @@
 {
   "name": "Fiddler Ray",
   "price": "5",
+  "stock": 39,
   "image": "/products/fiddler-ray/fiddler-ray--poster.webp",
   "artwork": "/stickers/marine-life/fiddler-ray.webp",
   "dieCut": "contour",

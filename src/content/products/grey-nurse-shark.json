@@ -1,6 +1,7 @@
 {
   "name": "Grey Nurse Shark",
   "price": "5",
+  "stock": 48,
   "image": "/products/grey-nurse-shark/grey-nurse-shark--poster.webp",
   "artwork": "/stickers/marine-life/grey-nurse-shark.webp",
   "dieCut": "contour",

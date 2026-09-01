@@ -31,10 +31,17 @@ const products = defineCollection({
     price: z.string().optional(),
     // Shown struck through beside the price, for a bundle that saves money.
     compareAt: z.string().optional(),
-    // How many are physically in the drawer. Leave unset to not track this one.
-    // 0 shows Sold out and blocks the buy button. This is a manual count, not
-    // live inventory: Stripe cannot decrement it, so update it after packing.
+    // How many are physically in the drawer, as the count stood when the site
+    // was last built. Leave unset to not track this one. 0 shows Sold out and
+    // blocks the buy button.
+    // This is the SEED for the live counter, not the counter itself: the real
+    // count lives in Netlify Blobs (see `src/lib/stock.ts`) so that an order can
+    // decrement it without a rebuild. Editing this number only changes what a
+    // variant starts on, so restock from /stock rather than here.
     stock: z.number().int().min(0).optional(),
+    // Same, for the drop shadow finish, where a product sells two. White and
+    // drop shadow are different sheets in the drawer, so they count separately.
+    stockDropShadow: z.number().int().min(0).optional(),
     // Smallest quantity that can be ordered. Enforced at Stripe, stated here.
     minOrder: z.number().int().min(1).optional(),
     // Shown but not yet buyable. Distinct from soldOut and from stock 0: this

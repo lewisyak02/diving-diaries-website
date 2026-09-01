@@ -22,8 +22,11 @@ export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use --lts
 
 - **GitHub repo:** `lewisyak02/diving-diaries-website`. **Netlify** auto-deploys `main`.
 - Netlify site name **divingdiaries** → live at `divingdiaries.netlify.app`. Custom domain
-  `divingdiaries.au` is registered at Squarespace; **DNS not pointed yet** (A `@` →
-  `75.2.60.5`, CNAME `www` → `divingdiaries.netlify.app`).
+  `divingdiaries.au` (registered at Squarespace) **is pointed and serving** as of Aug 2026.
+  Both addresses currently return 200; the netlify.app one does **not** redirect to the
+  custom domain, so anything pointed at either keeps working. Prefer the `.au` address in
+  anything given to an outside service (Stripe's webhook, for one), because a redirect would
+  be read as a failed delivery if that ever changes.
 - **The loop:** Claude edits code → **Lewis pushes via GitHub Desktop (Push origin)** →
   Netlify rebuilds. Claude cannot push (no auth); always hand off with "push in GitHub Desktop".
 - **⚠️ DEPLOYS ARE THE SCARCE RESOURCE. BATCH THEM.** Netlify free plan gives **300 credits a
@@ -103,22 +106,42 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   "Not printed yet" and "Coming soon". Distinct from `soldOut` and `stock: 0`, which mean it ran
   out rather than never existing. Checkout refuses it server side too. Zebra Shark is the only
   one right now, and is deliberately **left out of `pack.from`** until it exists.
-- **Stock:** `stock` on a product is a **manual count**, in whole units. `0` shows "Out of
-  stock", disables the buy button, and greys that sticker out in the pack picker (which also
-  caps how many of one design can go into a pack, and says "Not enough in stock" if the range
-  cannot fill one). `1..5` shows "Only N left". **Leave it unset to not track that product.**
-  Stripe cannot decrement it, so it has to be updated by hand after packing orders.
-  **As of Aug 2026 every product is untracked** (Lewis cleared the zeros); nothing has been
-  printed yet, so nothing is counted. **Each manual stock edit costs a deploy, i.e. 15 credits
-  or 5% of the month**, which is the main argument for the webhook below.
-- **Stock webhook: agreed, not built yet.** Automating stock means a Stripe webhook on
-  `checkout.session.completed` decrementing a count held in **Netlify Blobs** (`@netlify/blobs`,
-  available on this stack), i.e. outside git, so an order never triggers a rebuild. Costs about
-  **0.0002 credits per order** against 15 credits for a hand edit. Lewis chose **option 1** of
-  three: **validate stock at checkout only**, no live counts on the cards, zero extra requests.
-  (Option 2 was fetching counts client side, option 3 was rendering the shop on demand; both
-  cost more requests for little gain.) Caveat when building: Blobs only exists on Netlify, so it
-  cannot be fully tested locally and will likely need a fix or two after the first deploy.
+- **Stock counter (built Aug 2026, `src/lib/stock.ts`).** The live count lives in **Netlify
+  Blobs**, outside git, so an order never triggers a rebuild. Everything is counted by
+  **variant, not product**: a variant is one physical sticker in the drawer, keyed the same way
+  as a cart line (`fiddler-ray`, `front-adhesive-medium`, `front-adhesive-medium:ds`). White and
+  drop shadow are separate sheets with separate counts, which is why the schema has both `stock`
+  and `stockDropShadow`.
+  - **The JSON numbers are only the seed.** A variant missing from the blob starts on its
+    `stock` / `stockDropShadow` number, and from then on the blob wins. Editing the JSON after
+    that changes nothing live, so **restock from `/stock`**, never by editing a product file.
+    Seeding by key is also what makes a **newly added sticker start counting on its own**, pack
+    range included.
+  - **`/stock` is the counter**, password `STOCK_TOKEN`, noindex and out of the sitemap, not
+    linked from anywhere. It reads and writes through `/api/stock`. Editing there costs **no
+    deploy**, which is the whole point: a hand edit to a product file costs 15 credits, 5% of
+    the month.
+  - **`/api/stripe-webhook` does the decrementing**, on `checkout.session.completed` and
+    `checkout.session.async_payment_succeeded`. Checkout writes a machine readable tally into
+    the session metadata as `stock` (`"fiddler-ray=3,front-adhesive-medium:ds=1"`), so the
+    webhook never has to work out what was in a pack. Orders are claimed by session id before
+    being counted, so a Stripe retry cannot take stock twice, and counts clamp at 0 rather than
+    going negative. **A refund does not put stock back** (it has usually been posted already).
+  - **A pack draws down the same drawer as the singles**, and the two are added together before
+    anything is checked: 3 loose fiddler rays plus 2 inside a pack is 5 fiddler rays, and the
+    order is refused if that is more than there is. This is one combined check at the end of
+    `/api/checkout`, not per line.
+  - **The shop cards are a snapshot from the last build, not the live count.** That is Lewis's
+    option 1 (validate at checkout only): no live count on the cards, no extra requests, and the
+    server still refuses an order it cannot fill. `0` renders "Out of stock" and, for a two
+    finish product, only that finish's button; `1..5` renders "Only N left"; the finish buttons
+    rewrite both, since each finish has its own number. **Leave both unset to not count a
+    product at all** (Zebra Shark is the only one, and is `comingSoon` anyway).
+  - Blobs is a Netlify thing, but `astro dev` runs Netlify's local emulator, so the counter,
+    `/stock` and the webhook **do all work locally** and persist in `.netlify/`.
+  - **Counts as at Aug 2026** (Lewis's first print run, seeded in the product files): Circle
+    Holographic 12, Front Adhesive Medium 50 white / 42 drop shadow, Front Adhesive Small 214
+    white / 225 drop shadow, Hawksbill 49, Fiddler Ray 39, Starfish 48, Grey Nurse 48.
 - **Shopify was considered and rejected (Aug 2026).** Full Shopify would mean rebuilding the
   homepage, About, Watch, 42 journal posts and the pillars inside a shop platform, and losing
   the WebGL sticker viewer and the mix and match pack picker, for ~A$45-50/month. At $5 stickers
@@ -149,9 +172,11 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
     the cart has something in it. Open and close use a forced reflow and a `transitionend`
     with a timeout fallback, never `requestAnimationFrame`, which never fires in a
     backgrounded tab and left the drawer stuck half open.
-  - **`STRIPE_SECRET_KEY` is the only secret.** Copy `.env.example` to `.env` for local work and
-    set the same variable in Netlify. Without it the endpoint returns a clean 503 and the shop
-    still browses.
+  - **Three secrets, all in `.env.example`.** `STRIPE_SECRET_KEY` (checkout),
+    `STRIPE_WEBHOOK_SECRET` (the stock webhook) and `STOCK_TOKEN` (the `/stock` password). Copy
+    `.env.example` to `.env` for local work and set the same three in Netlify. Without the
+    Stripe key the endpoint returns a clean 503 and the shop still browses; without the other
+    two the counter simply does not decrement and `/stock` is switched off.
 - **Marine life artwork is AI generated**, not drawn by Lewis and not by a commissioned
   artist. He may collaborate with a real artist later. **Never write copy claiming these are
   hand drawn, illustrated, or his own art**, and do not imply a specific animal he met.
@@ -214,7 +239,6 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   Gold Coast and does not post from there: he dives there, which is why the journal and About
   mention it. Do not put a location in shop or order copy without asking.
 - **Activate the CMS** (GitHub App + env vars) when Lewis wants browser editing.
-- **Point the domain** `divingdiaries.au` at Netlify.
 - **Instagram/TikTok live stats:** not feasible without their official APIs; maintained by hand in
   the community CMS (YouTube auto-updates via the monthly sync).
 - **Stripe linking status (Aug 2026):** every product carries a `prod_` id **except the Sticker
