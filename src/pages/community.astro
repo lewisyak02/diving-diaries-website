@@ -6,7 +6,7 @@ import community from '../content/community/index.json';
 
 const yt = community.youtube ?? { subscribers: 0, views: 0 };
 const ig = community.instagram ?? { followers: 0 };
-const tt = community.tiktok ?? { followers: 0 };
+const tt = community.tiktok ?? { followers: 0, likes: 0 };
 
 const totalFollowers = (yt.subscribers || 0) + (ig.followers || 0) + (tt.followers || 0);
 const totalViews = yt.views || 0;
@@ -15,7 +15,7 @@ const comma = (n: number) => (n || 0).toLocaleString('en-AU');
 const platforms = [
   { name: 'YouTube', metric: 'subscribers', value: yt.subscribers, note: `${comma(yt.views || 0)} total views`, cta: 'Subscribe', href: SITE.socials.youtube },
   { name: 'Instagram', metric: 'followers', value: ig.followers, note: null, cta: 'Follow', href: SITE.socials.instagram },
-  { name: 'TikTok', metric: 'followers', value: tt.followers, note: null, cta: 'Follow', href: SITE.socials.tiktok },
+  { name: 'TikTok', metric: 'followers', value: tt.followers, note: tt.likes ? `${comma(tt.likes)} total likes` : null, cta: 'Follow', href: SITE.socials.tiktok },
 ].filter((p) => p.href);
 
 const updated = community.updated
