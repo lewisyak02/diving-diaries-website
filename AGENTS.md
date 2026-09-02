@@ -139,9 +139,14 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
     product at all** (Zebra Shark is the only one, and is `comingSoon` anyway).
   - Blobs is a Netlify thing, but `astro dev` runs Netlify's local emulator, so the counter,
     `/stock` and the webhook **do all work locally** and persist in `.netlify/`.
-  - **Counts as at Aug 2026** (Lewis's first print run, seeded in the product files): Circle
-    Holographic 12, Front Adhesive Medium 50 white / 42 drop shadow, Front Adhesive Small 214
-    white / 225 drop shadow, Hawksbill 49, Fiddler Ray 39, Starfish 48, Grey Nurse 48.
+  - **Counter went live 2 Sep 2026.** The build that shipped carried the 1 Sep seeds (727
+    total). Seven stickers sold between counting the drawer and that deploy (1 Circle
+    Holographic, 2 Hawksbill, 2 Starfish, 1 Grey Nurse, 1 Medium drop shadow) and were
+    corrected **on `/stock`**, not in the files, because by then the deploy had happened.
+    The file numbers were brought into line as history and now read: Circle Holographic 11,
+    Medium 50 white / 41 drop shadow, Small 214 white / 225 drop shadow, Hawksbill 47,
+    Fiddler Ray 39, Starfish 46, Grey Nurse 47, **720 total**. They will not be read again
+    unless the blob is wiped. **From here, every stock change happens on `/stock`.**
 - **Shopify was considered and rejected (Aug 2026).** Full Shopify would mean rebuilding the
   homepage, About, Watch, 42 journal posts and the pillars inside a shop platform, and losing
   the WebGL sticker viewer and the mix and match pack picker, for ~A$45-50/month. At $5 stickers
