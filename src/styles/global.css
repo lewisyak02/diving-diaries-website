@@ -166,3 +166,47 @@
     grid-auto-columns: minmax(8.5rem, 42%);
   }
 }
+
+/* The intro handing over.
+   The page does not just get uncovered, it settles into place: the whole view
+   eases down out of a slight push in while the navy lifts, and the hero copy
+   arrives a line at a time behind it. Only runs on the first load, because
+   `dd-intro-out` is set by the loader and removed once the entrance is done. */
+.dd-intro-out main {
+  animation: dd-settle 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+}
+@keyframes dd-settle {
+  from { transform: scale(1.045); opacity: 0.5; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Hero copy, one line at a time, starting as the navy clears. */
+.dd-intro-out [data-intro] > * {
+  animation: dd-rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dd-intro-out [data-intro] > *:nth-child(1) { animation-delay: 0.42s; }
+.dd-intro-out [data-intro] > *:nth-child(2) { animation-delay: 0.52s; }
+.dd-intro-out [data-intro] > *:nth-child(3) { animation-delay: 0.62s; }
+.dd-intro-out [data-intro] > *:nth-child(4) { animation-delay: 0.72s; }
+@keyframes dd-rise {
+  from { transform: translateY(1.35rem); opacity: 0; filter: blur(6px); }
+  to { transform: none; opacity: 1; filter: none; }
+}
+
+/* The scroll cue is the last thing to turn up, once the rest has landed. */
+.dd-intro-out [data-intro-cue] {
+  animation: dd-cue 0.7s ease 1.05s both;
+}
+@keyframes dd-cue {
+  from { opacity: 0; transform: translate(-50%, 0.5rem); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dd-intro-out main,
+  .dd-intro-out [data-intro] > *,
+  .dd-intro-out [data-intro-cue] {
+    animation: dd-fade-in 0.4s ease both;
+  }
+  @keyframes dd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+}
