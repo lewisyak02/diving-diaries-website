@@ -27,12 +27,103 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="generator" content={Astro.generator} />
     <SEO title={title} description={description} image={image} noindex={noindex} type={type} />
+    {!bare && <link rel="preload" as="video" href="/loader/dd-spin-loop.mp4" type="video/mp4" />}
+    <!-- The intro has to paint before the stylesheet that would style it has even
+         arrived, so its few rules are inline. These stay at the top level of the
+         template: inside a {} expression Astro parses the contents as JSX and the
+         wrapper leaks into the page as text, which silently breaks both. -->
+    <style is:inline>
+      #dd-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        background: #01123a;
+        transition: opacity 0.5s ease, visibility 0.5s;
+      }
+      #dd-loader.is-gone { opacity: 0; visibility: hidden; pointer-events: none; }
+      #dd-loader video, #dd-loader img { width: min(78vw, 560px); max-width: 100%; display: block; }
+      #dd-loader img { display: none; }
+      /* Reduced motion gets the landed badge and the same fade, with no spin. */
+      @media (prefers-reduced-motion: reduce) {
+        #dd-loader video { display: none; }
+        #dd-loader img { display: block; }
+        #dd-loader { transition: none; }
+      }
+    </style>
+    <noscript>
+      <style is:inline>
+        #dd-loader { display: none !important; }
+      </style>
+    </noscript>
   </head>
   <body class="flex min-h-screen flex-col">
+    {
+      !bare && (
+        <div id="dd-loader" aria-hidden="true">
+          <video
+            src="/loader/dd-spin-loop.mp4"
+            poster="/loader/dd-spin-poster.jpg"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+          />
+          <img src="/loader/dd-spin-poster.jpg" alt="" />
+        </div>
+      )
+    }
     {!bare && <Header />}
     <main class="flex-1">
       <slot />
     </main>
     {!bare && <Footer />}
+    <script is:inline>
+      (function () {
+        var el = document.getElementById('dd-loader');
+        if (!el) return;
+        // First visit only. Moving around the site does not replay it.
+        var KEY = 'dd-seen-intro';
+        try {
+          if (sessionStorage.getItem(KEY)) {
+            el.remove();
+            return;
+          }
+        } catch (e) {
+          /* private mode, the intro just plays again next visit */
+        }
+        var done = false;
+        function hide() {
+          if (done) return;
+          done = true;
+          try {
+            sessionStorage.setItem(KEY, '1');
+          } catch (e) {}
+          el.classList.add('is-gone');
+          setTimeout(function () {
+            el.remove();
+          }, 600);
+        }
+        // Lift as soon as what is behind it is worth looking at: the hero still on
+        // the home page, otherwise the page being ready. It never waits on the
+        // hero video itself, which is megabytes.
+        var hero = document.querySelector('main video[poster]');
+        if (hero) {
+          var probe = new Image();
+          probe.onload = hide;
+          probe.onerror = hide;
+          probe.src = hero.getAttribute('poster');
+          if (probe.complete) hide();
+        } else if (document.readyState === 'complete') {
+          hide();
+        } else {
+          window.addEventListener('load', hide);
+        }
+        // Never strand anyone on a spinning logo, whatever else goes wrong.
+        setTimeout(hide, 2500);
+      })();
+    </script>
   </body>
 </html>
