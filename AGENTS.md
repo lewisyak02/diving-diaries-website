@@ -240,9 +240,10 @@ a Facebook page. Contact email divingdiariesau@gmail.com. Shot on a DJI Osmo Act
   light background and the drop shadow vanishes on a dark one. Do not "tidy" it back to
   `bg-ocean-900`.
 - **Returns policy:** no returns for change of mind, genuine damage handled case by case,
-  **15 days** to report it. On `/policies`, linked from the footer. Lewis is **not** on the
-  Gold Coast and does not post from there: he dives there, which is why the journal and About
-  mention it. Do not put a location in shop or order copy without asking.
+  **15 days** to report it. On `/policies`, linked from the footer. Lewis lives in **Golden Bay, WA** and
+  posts from there. He grew up on the Gold Coast and still dives it when home, which is why
+  the journal and About mention it so often. Do not put a location in shop or order copy
+  without asking.
 - **Activate the CMS** (GitHub App + env vars) when Lewis wants browser editing.
 - **Instagram/TikTok live stats:** not feasible without their official APIs; maintained by hand in
   the community CMS (YouTube auto-updates via the monthly sync).
