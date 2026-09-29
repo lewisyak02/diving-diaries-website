@@ -94,7 +94,8 @@ export default config({
             }),
             pillar: fields.select({
               label: 'Pillar',
-              description: 'Which pillar page this video shows on. "None" keeps it on the Watch page only.',
+              description:
+                'Which series this video belongs to on the Watch page. The five pillars also show it on their pillar page; Scubavan is Watch only. "None" hides it from every series and leaves it in All.',
               options: [
                 { label: 'None (Watch page only)', value: 'none' },
                 { label: 'Diary Entries', value: 'diary-entries' },
@@ -102,6 +103,7 @@ export default config({
                 { label: 'Fish ID', value: 'fish-id' },
                 { label: 'Gear', value: 'gear' },
                 { label: 'Tips', value: 'tips' },
+                { label: 'Scubavan', value: 'scubavan' },
               ],
               defaultValue: 'none',
             }),

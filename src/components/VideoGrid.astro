@@ -5,14 +5,20 @@
 interface Props {
   videos: { id: string; title: string; short?: boolean }[];
   reels?: boolean;
+  /**
+   * Replaces the default grid classes, for a caller that lays the cards out
+   * itself. The Watch page uses it to switch one set of cards between a
+   * sideways shelf and a full grid without rendering them twice.
+   */
+  containerClass?: string;
 }
-const { videos, reels = false } = Astro.props;
+const { videos, reels = false, containerClass } = Astro.props;
 const cols = reels
   ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
   : 'sm:grid-cols-2 lg:grid-cols-3';
 ---
 
-<div class={`grid gap-6 ${cols}`}>
+<div class={containerClass ?? `grid gap-6 ${cols}`}>
   {
     videos.map((v) => (
       <article class="video-facade group flex flex-col overflow-hidden rounded-2xl border border-ocean-100 bg-white transition-all hover:-translate-y-1 hover:shadow-xl" data-id={v.id}>

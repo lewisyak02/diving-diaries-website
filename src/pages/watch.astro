@@ -3,17 +3,31 @@ import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import VideoGrid from '../components/VideoGrid.astro';
-import ShowMore from '../components/ShowMore.astro';
 import { socialLinks } from '../lib/site';
+import { SERIES, unit } from '../lib/series';
 import videoData from '../content/videos/index.json';
 import watchBg from '../assets/watch-bg.jpg';
 
-const videos = (videoData.items ?? []).filter((v) => !v.short);
+const all = videoData.items ?? [];
+
+// A series with nothing in it is dropped rather than shown empty, so the rail
+// only ever offers something to watch. Tag a video to Gear or Tips in the CMS
+// and that series appears on its own.
+const series = SERIES.map((s) => ({
+  ...s,
+  videos: all.filter((v) => v.pillar === s.slug),
+})).filter((s) => s.videos.length > 0);
+
+const tabs = [{ slug: 'all', label: 'All', count: all.length }, ...series.map((s) => ({
+  slug: s.slug,
+  label: s.label,
+  count: s.videos.length,
+}))];
 ---
 
 <Layout
   title="Watch"
-  description="Watch Diving Diaries, cinematic dive trips, marine life encounters, and the Fish ID series. New underwater adventures every week on YouTube."
+  description="Every Diving Diaries video in one place, sorted into series: dive diaries, dive site reviews, the Fish ID reels, and the Scubavan build. New underwater adventures every week."
 >
   <!-- Hero -->
   <section class="relative flex min-h-[60vh] items-center overflow-hidden">
@@ -28,10 +42,10 @@ const videos = (videoData.items ?? []).filter((v) => !v.short);
     <div class="absolute inset-0 bg-gradient-to-br from-ocean-950/85 via-ocean-950/60 to-purple-900/70"></div>
     <div class="relative mx-auto w-full max-w-3xl px-5 pt-20 text-center text-white">
       <p class="kicker text-purple-200">The channel</p>
-      <h1 class="mt-3 text-4xl sm:text-6xl">Watch</h1>
+      <h1 class="mt-3 text-4xl sm:text-6xl">The Dive Log</h1>
       <p class="mx-auto mt-4 max-w-xl text-lg text-ocean-100">
-        Every long form dive, in one place. New underwater adventures every week:
-        diary entries, dive site reviews, fish ID, gear and tips.
+        Every video in one place, sorted into the series it belongs to. Tap any
+        thumbnail to play it right here.
       </p>
       <div class="mt-8 flex flex-wrap justify-center gap-4">
         {
@@ -47,23 +61,92 @@ const videos = (videoData.items ?? []).filter((v) => !v.short);
     </div>
   </section>
 
-  <!-- Video grid -->
-  <section class="mx-auto max-w-6xl px-5 py-20">
-    <div class="mb-10 text-center">
-      <p class="kicker">Long form dives</p>
-      <h2 class="mt-3 text-3xl text-ocean-800 sm:text-4xl">The dive log</h2>
-      <p class="mx-auto mt-3 max-w-xl text-slate-600">
-        {videos.length} episodes and counting. Tap any thumbnail to play.
-      </p>
-    </div>
-    {
-      videos.length > 0 ? (
-        <ShowMore initial={15} label="Show all dives">
-          <VideoGrid videos={videos} />
-        </ShowMore>
-      ) : (
+  {
+    all.length > 0 ? (
+      <div id="watch" data-view="all">
+        {/* Series rail */}
+        <div class="sticky top-[78px] z-30 border-b border-ocean-100 bg-white/90 backdrop-blur-lg">
+          <div class="mx-auto max-w-6xl px-5">
+            <div class="flex gap-2 overflow-x-auto py-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Series">
+              {tabs.map((t) => (
+                <button
+                  type="button"
+                  role="tab"
+                  data-series-tab={t.slug}
+                  aria-selected={t.slug === 'all' ? 'true' : 'false'}
+                  class="group flex shrink-0 items-center gap-2 rounded-full border border-ocean-100 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-ocean-800 transition-colors hover:border-purple-400 aria-selected:border-purple-500 aria-selected:bg-purple-500 aria-selected:text-white"
+                >
+                  {t.label}
+                  <span class="rounded-full bg-ocean-50 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-ocean-500 transition-colors group-aria-selected:bg-white/25 group-aria-selected:text-white">
+                    {t.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* One block per series, shown as a shelf in All and a grid on its own */}
+        <div class="mx-auto max-w-6xl px-5 py-14">
+          {series.map((s) => (
+            <section data-series={s.slug} data-reels={s.reels ? '' : undefined} class="mb-14 last:mb-0">
+              <div class="mb-6 flex items-end justify-between gap-6">
+                <div>
+                  <h2 class="text-2xl text-ocean-800 sm:text-3xl">{s.label}</h2>
+                  <p class="mt-1.5 text-sm text-slate-600">
+                    {s.videos.length} {unit(s, s.videos.length)} &middot; {s.blurb}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-see-all={s.slug}
+                  class="shrink-0 text-xs font-bold uppercase tracking-wide text-purple-600 hover:text-purple-700"
+                >
+                  See all &rarr;
+                </button>
+              </div>
+              <VideoGrid videos={s.videos} reels={s.reels} containerClass="video-track" />
+            </section>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <section class="mx-auto max-w-6xl px-5 py-20">
         <p class="text-center text-slate-600">Videos are on the way.</p>
-      )
-    }
-  </section>
+      </section>
+    )
+  }
 </Layout>
+
+<script>
+  const root = document.getElementById('watch');
+  if (root) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-series-tab]')];
+    const blocks = [...root.querySelectorAll<HTMLElement>('[data-series]')];
+    const slugs = tabs.map((t) => t.dataset.seriesTab!);
+
+    function show(view: string, scroll = false) {
+      root!.dataset.view = view;
+      for (const b of blocks) b.hidden = view !== 'all' && b.dataset.series !== view;
+      for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.seriesTab === view));
+      // "See all" only means anything while the shelves are showing.
+      for (const b of root!.querySelectorAll<HTMLElement>('[data-see-all]')) b.hidden = view !== 'all';
+      try {
+        history.replaceState(null, '', view === 'all' ? location.pathname : `#${view}`);
+      } catch {
+        /* a blocked history write is not worth failing the page over */
+      }
+      if (scroll) root!.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    root.addEventListener('click', (e) => {
+      const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-series-tab]');
+      if (tab) return show(tab.dataset.seriesTab!);
+      const seeAll = (e.target as HTMLElement).closest<HTMLElement>('[data-see-all]');
+      if (seeAll) show(seeAll.dataset.seeAll!, true);
+    });
+
+    const hash = location.hash.slice(1);
+    show(slugs.includes(hash) ? hash : 'all');
+  }
+</script>

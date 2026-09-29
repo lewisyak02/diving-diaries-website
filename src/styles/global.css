@@ -121,3 +121,48 @@
   font-style: italic;
   color: var(--color-ocean-800);
 }
+
+/* Watch page series.
+   One set of cards per series, laid out two ways. In the All view every series
+   is a shelf that scrolls sideways; picking a series opens that one as a full
+   grid. Switching is CSS only, so the cards are in the HTML exactly once and a
+   crawler sees every video whichever view is showing.
+   These live here rather than in watch.astro because the track is rendered by
+   VideoGrid, and a parent's scoped styles never reach a child component. */
+.video-track {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* All: sideways shelf */
+[data-view='all'] .video-track {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15rem, 30%);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 0.75rem;
+  overscroll-behavior-x: contain;
+}
+[data-view='all'] [data-reels] .video-track {
+  grid-auto-columns: minmax(9.5rem, 17%);
+}
+[data-view='all'] .video-track > * {
+  scroll-snap-align: start;
+}
+
+/* A single series: full grid */
+[data-view]:not([data-view='all']) .video-track {
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+[data-view]:not([data-view='all']) [data-reels] .video-track {
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+}
+
+@media (max-width: 640px) {
+  [data-view='all'] .video-track {
+    grid-auto-columns: minmax(13rem, 74%);
+  }
+  [data-view='all'] [data-reels] .video-track {
+    grid-auto-columns: minmax(8.5rem, 42%);
+  }
+}
