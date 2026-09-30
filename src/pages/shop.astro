@@ -1,11 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
-import { socialLinks } from '../lib/site';
 import Layout from '../layouts/Layout.astro';
-import Button from '../components/Button.astro';
 import HoloSticker from '../components/HoloSticker.astro';
 import StickerPicker from '../components/StickerPicker.astro';
 import BoardshortStyles from '../components/BoardshortStyles.astro';
+
+// Prerendered so Netlify's build time form detection finds the notify form.
+export const prerender = true;
 
 const products = (await getCollection('products')).sort(
   (a, b) => (a.data.order ?? 1) - (b.data.order ?? 1)
@@ -247,18 +248,44 @@ const packOptions = (entries: { product: string; dropShadow: boolean }[]) =>
           <p class="mt-4 text-sm leading-relaxed text-slate-600">
             Men's S to 2XL. Women's styles are parked for now.
           </p>
-          <h3 class="mt-8 text-lg text-ocean-800">Want to know when they land?</h3>
+          <h3 class="mt-8 text-lg text-ocean-800">Get an email when they land</h3>
           <p class="mt-4 text-sm leading-relaxed text-slate-600">
-            They get shown on the channel first. Follow along and you will see
-            them before anyone else.
+            One email when the boardies go on sale. Nothing else, and you can
+            stop any time.
           </p>
-          <div class="mt-5 flex flex-wrap gap-3">
-            {socialLinks.slice(0, 2).map((l, i) => (
-              <Button href={l.href} variant={i === 0 ? 'primary' : 'outline'} external>
-                {l.label}
-              </Button>
-            ))}
-          </div>
+          {/* Netlify Forms: picked up at deploy from this static HTML, the same
+              way the contact form is. */}
+          <form
+            name="boardshorts-notify"
+            method="POST"
+            action="/on-the-list"
+            data-netlify="true"
+            netlify-honeypot="bot-field"
+            class="mt-5"
+          >
+            <input type="hidden" name="form-name" value="boardshorts-notify" />
+            <p class="hidden">
+              <label>Don't fill this out: <input name="bot-field" /></label>
+            </p>
+            <label for="notify-email" class="sr-only">Email address</label>
+            <div class="flex flex-wrap gap-3">
+              <input
+                id="notify-email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                placeholder="you@email.com"
+                class="min-w-0 flex-1 rounded-full border border-ocean-200 bg-white px-5 py-3 text-sm outline-none focus:border-ocean-500 focus:ring-2 focus:ring-ocean-200"
+              />
+              <button
+                type="submit"
+                class="shrink-0 rounded-full bg-purple-500 px-7 py-3 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-purple-600"
+              >
+                Notify me
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
