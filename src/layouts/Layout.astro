@@ -39,14 +39,31 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
         z-index: 100;
         display: grid;
         place-items: center;
-        background: #01123a;
+        /* The badge cannot be a transparent video: Safari will not composite
+           alpha in WebM and h264 cannot carry it at all, so it arrives on a
+           painted plate. A navy that dark does not survive h264 intact either,
+           and the plate lands a few values off whatever flat colour sits behind
+           it, which is enough to read as a lighter rectangle. So there is no
+           flat colour behind it to compare against: a soft pool of light,
+           centred where the badge is, that the plate simply sits inside. */
+        background:
+          radial-gradient(60% 52% at 50% 50%, rgb(4, 26, 70) 0%, rgb(1, 18, 58) 62%, rgb(1, 15, 48) 100%),
+          rgb(1, 18, 58);
         transition: opacity 0.5s ease, visibility 0.5s;
       }
       #dd-loader video, #dd-loader img {
-        width: min(46vw, 260px);
+        /* Wider than the badge looks, because the clip carries margin around it
+           for the feather below. */
+        width: min(74vw, 420px);
         max-width: 100%;
         display: block;
         transition: opacity 0.26s ease, transform 0.5s cubic-bezier(0.32, 0, 0.2, 1);
+        /* The clip is cropped tight to the badge with margin left for this: it
+           holds solid across the artwork, which reaches 36% wide and 25% tall
+           from the middle, then fades out well before the frame ends, so the
+           plate never presents an edge anywhere. */
+        -webkit-mask-image: radial-gradient(ellipse 50% 46% at 50% 50%, #000 78%, transparent 100%);
+        mask-image: radial-gradient(ellipse 50% 46% at 50% 50%, #000 78%, transparent 100%);
       }
       #dd-loader img { display: none; }
       /* The badge comes at you and blurs past, the way a sting pushes through a
