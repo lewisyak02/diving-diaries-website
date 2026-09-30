@@ -114,8 +114,16 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
         } catch (e) {
           /* private mode, the intro just plays again next visit */
         }
+        // The page behind is usually ready in a few hundred milliseconds, sooner
+        // than the spin clip itself finishes arriving, so being "ready" cannot be
+        // the only thing that ends it or the intro is gone before it is seen.
+        // It serves a minimum, timed from when the browser started loading.
+        var MIN_MS = 1800;
+        var MAX_MS = 4200;
         var done = false;
-        function hide() {
+        var waiting = false;
+
+        function finish() {
           if (done) return;
           done = true;
           try {
@@ -130,23 +138,30 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
             document.documentElement.classList.remove('dd-intro-out');
           }, 2200);
         }
-        // Lift as soon as what is behind it is worth looking at: the hero still on
-        // the home page, otherwise the page being ready. It never waits on the
-        // hero video itself, which is megabytes.
+
+        function ready() {
+          if (waiting || done) return;
+          waiting = true;
+          setTimeout(finish, Math.max(0, MIN_MS - performance.now()));
+        }
+
+        // Ready means what is behind is worth looking at: the hero still on the
+        // home page, otherwise the page itself. It never waits on the hero video,
+        // which is megabytes.
         var hero = document.querySelector('main video[poster]');
         if (hero) {
           var probe = new Image();
-          probe.onload = hide;
-          probe.onerror = hide;
+          probe.onload = ready;
+          probe.onerror = ready;
           probe.src = hero.getAttribute('poster');
-          if (probe.complete) hide();
+          if (probe.complete) ready();
         } else if (document.readyState === 'complete') {
-          hide();
+          ready();
         } else {
-          window.addEventListener('load', hide);
+          window.addEventListener('load', ready);
         }
         // Never strand anyone on a spinning logo, whatever else goes wrong.
-        setTimeout(hide, 2500);
+        setTimeout(finish, Math.max(0, MAX_MS - performance.now()));
       })();
     </script>
   </body>
