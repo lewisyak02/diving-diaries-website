@@ -134,9 +134,12 @@ const { title, description, image, noindex, type, bare = false } = Astro.props;
         // The page behind is usually ready in a few hundred milliseconds, sooner
         // than the spin clip itself finishes arriving, so being "ready" cannot be
         // the only thing that ends it or the intro is gone before it is seen.
-        // It serves a minimum, timed from when the browser started loading.
-        var MIN_MS = 1800;
-        var MAX_MS = 4200;
+        // It serves a minimum, timed from when the browser started loading, so a
+        // fast page only shortens a wait it was already having.
+        // A full turn of the badge is 2.67s, so it holds just past that and
+        // lands having come all the way round rather than stopping part way.
+        var MIN_MS = 2700;
+        var MAX_MS = 4800;
         var done = false;
         var waiting = false;
 
