@@ -54,6 +54,9 @@ export default config({
         }, { label: 'Instagram' }),
         tiktok: fields.object({
           followers: fields.integer({ label: 'TikTok followers', defaultValue: 0 }),
+          // The community page shows this. Without it here, saving the singleton
+          // in the CMS would write the object back without it and drop the number.
+          likes: fields.integer({ label: 'TikTok total likes', defaultValue: 0 }),
         }, { label: 'TikTok' }),
       },
     }),
