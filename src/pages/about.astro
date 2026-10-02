@@ -3,7 +3,12 @@ import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import { SITE } from '../lib/site';
-import diver from '../assets/diver.jpg';
+// Extended to 21:9 so the hero can show the whole scene. object-cover scales to
+// the hero's width, so a wider source renders every original pixel smaller: this
+// is what pulls the shot back off his face. The original stays for anything that
+// wants the full frame. The outer thirds are the edge of the photo stretched and
+// blurred, which reads as out of focus water; nothing is invented.
+import diver from '../assets/diver-wide.jpg';
 
 const sections = [
   {
