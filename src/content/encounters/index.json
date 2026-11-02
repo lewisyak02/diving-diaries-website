@@ -1,9 +1,9 @@
 {
   "items": [
-    { "image": "/images/encounters/fiddler-ray.jpg", "caption": "Fiddler Ray" },
-    { "image": "/images/encounters/wobbegong.jpg", "caption": "Wobbegong" },
-    { "image": "/images/encounters/bumphead-wrasse.jpg", "caption": "Bumphead Wrasse" },
-    { "image": "/images/encounters/diver-descent.jpg", "caption": "Diver Descent" },
-    { "image": "/images/encounters/anemonefish.jpg", "caption": "Anemonefish" }
+    { "image": "/images/encounters/grey-nurse-shark.jpg", "caption": "Grey Nurse Shark" },
+    { "image": "/images/encounters/ray.jpg", "caption": "Ray" },
+    { "image": "/images/encounters/seal-rocks-wobbegong.jpg", "caption": "Seal Rocks Wobbegong" },
+    { "image": "/images/encounters/diamondfish.jpg", "caption": "Diamondfish" },
+    { "image": "/images/encounters/diver.jpg", "caption": "Diver" }
   ]
 }
