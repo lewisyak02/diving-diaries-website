@@ -1,6 +1,48 @@
 {
   "items": [
     {
+      "title": "Toyota Hiace Campervan (Scubavan) Conversion | Ep 6",
+      "id": "Rp0Mlk7f0fs",
+      "pillar": "scubavan",
+      "short": false
+    },
+    {
+      "title": "Rottnest Island - 16.09.26 | Entry #48",
+      "id": "uNptrTuy-Wo",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
+      "title": "Omeo Wreck - 09.09.26 | Entry #47",
+      "id": "UJwIXyaERVw",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
+      "title": "Kwinana Grain Terminal - 22.08.2026 | Entry #46",
+      "id": "6osJo6dKtgk",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
+      "title": "Toyota Hiace Campervan (Scubavan) Conversion | Ep 5",
+      "id": "sawG5D2dhGc",
+      "pillar": "scubavan",
+      "short": false
+    },
+    {
+      "title": "Kirra Reef - 04.07.2026 | Entry #45",
+      "id": "uKYQTKgcIlw",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
+      "title": "Gold Coast Seaway (The Spit) - 03.07.2026 | Entry #44",
+      "id": "KwOLX9dc3T4",
+      "pillar": "diary-entries",
+      "short": false
+    },
+    {
       "title": "Flynn Reef - 22.06.2026 | Entry #43",
       "id": "p8FowYrAQyA",
       "pillar": "diary-entries",
@@ -287,6 +329,30 @@
       "id": "Zg42vjBSsCg",
       "pillar": "diary-entries",
       "short": false
+    },
+    {
+      "title": "Spotted Sweetlips",
+      "id": "NdRWbZPzXpk",
+      "pillar": "fish-id",
+      "short": true
+    },
+    {
+      "title": "Green Turtle #fishid #scubadiving #diving #turtle",
+      "id": "LGEEm9uefG0",
+      "pillar": "fish-id",
+      "short": true
+    },
+    {
+      "title": "Turrum",
+      "id": "Bv-d4Nd0_wI",
+      "pillar": "fish-id",
+      "short": true
+    },
+    {
+      "title": "Pickhandle Barracuda",
+      "id": "Io-z2nGtiQ8",
+      "pillar": "fish-id",
+      "short": true
     },
     {
       "title": "Eastern Fiddler Ray",
